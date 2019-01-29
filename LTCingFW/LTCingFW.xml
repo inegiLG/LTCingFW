@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<LTCingFW>
+  <beans>
+    <bean name="OpcServerService" type="Convertor4.Service.OpcServerService" />
+  </beans>
+  <aspects>
+    <aspect scope="*.Service.*.~Save" beforemethod="LGPMS.Aop.AopPlugIns.testBeforeAop" aftermethod="LGPMS.Aop.AopPlugIns.testAfterAop"/>
+  </aspects>
+  <dbs>
+    <db dbAlias="oracle1">
+      <dbtype>oracle</dbtype>
+      <datasource>192.168.1.3:1522/fmsdb</datasource>
+      <userid>lgc</userid>
+      <password>FMSdba2018</password>
+      <timeout>5</timeout>
+      <pooling>true</pooling>
+      <maxsize>500</maxsize>
+      <minsize>1</minsize>
+      <incrsize>5</incrsize>
+      <decrsize>2</decrsize>
+    </db>
+    <db dbAlias="sqlserver1">
+      <dbtype>sqlserver</dbtype>
+      <datasource>192.168.1.3</datasource>
+      <initialcatalog>TESTDB</initialcatalog>
+      <userid>sa</userid>
+      <password>FMSdba2018</password>
+      <timeout>5</timeout>
+      <pooling>true</pooling>
+      <maxsize>500</maxsize>
+      <minsize>1</minsize>
+      <incrsize>5</incrsize>
+      <decrsize>2</decrsize>
+    </db>
+  </dbs>
+  <cache>
+    <switch>on/off</switch>
+    <type>memory/local/net</type>
+    <localposition></localposition>
+    <netposition></netposition>
+  </cache>
+  <configs>
+    <sqlserverdatalocation>E:\SqlserverData\</sqlserverdatalocation>
+  </configs>
+</LTCingFW>
