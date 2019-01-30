@@ -286,7 +286,7 @@ namespace LTCingFW.utils
                     }
                     else {
                         //Decimal和String
-                        info.SetValue(model, value.ToString());
+                        info.SetValue(model, value);
                     }
                     
 
@@ -548,7 +548,8 @@ namespace LTCingFW.utils
 
         public static bool oracleTypeIsString(int typeInt)
         {
-            if ((OracleDbType)typeInt == OracleDbType.Varchar2 || (OracleDbType)typeInt == OracleDbType.NVarchar2)
+            if ((OracleDbType)typeInt == OracleDbType.Varchar2 || (OracleDbType)typeInt == OracleDbType.NVarchar2
+                || (OracleDbType)typeInt == OracleDbType.Char || (OracleDbType)typeInt == OracleDbType.NChar)
             {
                 return true;
             }
@@ -557,7 +558,7 @@ namespace LTCingFW.utils
         public static bool oracleTypeIsDate(int typeInt)
         {
             if ((OracleDbType)typeInt == OracleDbType.Date || (OracleDbType)typeInt == OracleDbType.TimeStamp
-                                || (OracleDbType)typeInt == OracleDbType.TimeStampLTZ || (OracleDbType)typeInt == OracleDbType.TimeStampTZ)
+                || (OracleDbType)typeInt == OracleDbType.TimeStampLTZ || (OracleDbType)typeInt == OracleDbType.TimeStampTZ)
             {
                 return true;
             }
@@ -566,10 +567,10 @@ namespace LTCingFW.utils
         public static bool oracleTypeIsNumber(int typeInt)
         {
             if ((OracleDbType)typeInt == OracleDbType.Int16 || (OracleDbType)typeInt == OracleDbType.Int32
-                                || (OracleDbType)typeInt == OracleDbType.Int64 || (OracleDbType)typeInt == OracleDbType.Double
-                                || (OracleDbType)typeInt == OracleDbType.Decimal || (OracleDbType)typeInt == OracleDbType.Long
-                                || (OracleDbType)typeInt == OracleDbType.LongRaw || (OracleDbType)typeInt == OracleDbType.Raw
-                                || (OracleDbType)typeInt == OracleDbType.Single)
+                || (OracleDbType)typeInt == OracleDbType.Int64 || (OracleDbType)typeInt == OracleDbType.Double
+                || (OracleDbType)typeInt == OracleDbType.Decimal || (OracleDbType)typeInt == OracleDbType.Long
+                || (OracleDbType)typeInt == OracleDbType.LongRaw || (OracleDbType)typeInt == OracleDbType.Raw
+                || (OracleDbType)typeInt == OracleDbType.Single)
             {
                 return true;
             }

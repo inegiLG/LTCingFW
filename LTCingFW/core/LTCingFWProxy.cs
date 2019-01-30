@@ -235,8 +235,8 @@ namespace LTCingFW
                     #region 方法尾部处理
                     sb.Append(" }\n catch (Exception ex) { \n ");
                     //sb.Append(" logger.Warn(\"Proxy_InnerException:\"+ex.Message+ex.StackTrace);\n");
-                    sb.Append(" throw ex; \n");
                     sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); \n}\n");
+                    sb.Append(" throw ex; \n");
                     sb.Append(" }\n ");
                     sb.Append(" finally \n { \n if(!outerSession)\n{\n if(session != null) \n{ \n session.Close(); \n}\n ");
                     sb.Append(" if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");
@@ -258,7 +258,7 @@ namespace LTCingFW
 
                 #endregion
 
-                //日志
+                //记录日志
                 logger.Info(String.Format("create Proxy for bean[{0}]", bean.Name));
                 bean.ProxyType = Configs.proxyNameSpace + "." + LTCingFW_proxy_name;
             }

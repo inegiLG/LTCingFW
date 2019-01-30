@@ -24,7 +24,7 @@ namespace LTCingFW
         /// <param name="session"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        public String GetTableName(DBSession session, OrmBaseModel model)
+        private String GetTableName(DBSession session, OrmBaseModel model)
         {
             OrmTableAttribute[] attrs = model.GetType().GetCustomAttributes(typeof(OrmTableAttribute), true) as OrmTableAttribute[];
             foreach (OrmTableAttribute attr in attrs)
@@ -44,7 +44,7 @@ namespace LTCingFW
         /// <param name="session"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        public String GetAllColumnNameStr(DBSession session, OrmBaseModel model)
+        private String GetAllColumnNameStr(DBSession session, OrmBaseModel model)
         {
             StringBuilder sb = new StringBuilder();
             foreach (OrmColumnBean bean in model.OrmList)
@@ -171,58 +171,56 @@ namespace LTCingFW
         /// <param name="colType">db数据类型</param>
         /// <returns></returns>
         private object getProperDbParameterValue( object value ,int colType) {
+            //空
             if (value == null) {
                 return System.DBNull.Value;
             }
-            else if (FwUtilFunc.oracleTypeIsString(colType))
-            {
-                return value;
-            }
-            else if (FwUtilFunc.oracleTypeIsNumber(colType))
-            {
-                string val = value as string;
-                if (val.Trim() == "") {
-                    return System.DBNull.Value;
-                }
-                return Decimal.Parse(val);
-            }
-            else if (FwUtilFunc.oracleTypeIsDate(colType))
+            //以字符串模拟其他类型
+            if (value is string)
             {
                 string val = value as string;
                 if (val.Trim() == "")
                 {
                     return System.DBNull.Value;
                 }
-                return Convert.ToDateTime(val);//使用DateTime
-            }
-            else if (FwUtilFunc.sqlserverTypeIsString(colType))
-            {
-                return value;
-            }
-            else if (FwUtilFunc.sqlserverTypeIsNumber(colType))
-            {
-                string val = value as string;
-                if (val.Trim() == "")
+                //Oracle Type
+                if (FwUtilFunc.oracleTypeIsString(colType))
                 {
-                    return System.DBNull.Value;
+                    return value;
                 }
-                return Decimal.Parse(val);
-            }
-            else if (FwUtilFunc.sqlserverTypeIsDate(colType))
-            {
-                string val = value as string;
-                if (val.Trim() == "")
+                else if (FwUtilFunc.oracleTypeIsNumber(colType))
                 {
-                    return System.DBNull.Value;
+                    return Decimal.Parse(val);
                 }
-                return Convert.ToDateTime(val);//使用DateTime
+                else if (FwUtilFunc.oracleTypeIsDate(colType))
+                {
+                    return Convert.ToDateTime(val);//使用DateTime
+                }
+                //SqlServer Type
+                else if (FwUtilFunc.sqlserverTypeIsString(colType))
+                {
+                    return value;
+                }
+                else if (FwUtilFunc.sqlserverTypeIsNumber(colType))
+                {
+                    return Decimal.Parse(val);
+                }
+                else if (FwUtilFunc.sqlserverTypeIsDate(colType))
+                {
+                    return Convert.ToDateTime(val);//使用DateTime
+                }
+                //MySql未实现
+                else {
+                    throw new LTCingFWException(String.Format("无法将String类型的模拟值转换为数据库的{0}类型",colType));
+                }
             }
             else {
-                throw new Exception(colType+"列类型未处理，不可赋值");
+                logger.Info(String.Format("对列类型{0}不做处理，请自行保证值可以使用!", colType));
+                return value;
             }
         }
-
-        public void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
+        //默认与主键无关，用于查询
+        private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
         {
             SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyPrimaryKey, false);
         }
