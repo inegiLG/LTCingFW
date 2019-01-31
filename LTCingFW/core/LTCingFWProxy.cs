@@ -58,7 +58,7 @@ namespace LTCingFW
                 parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
-                //parameters.ReferencedAssemblies.Add(curr_path+"\\log4net.dll");//缺少AssemblyInfo.cs内配置，无法使用
+                parameters.ReferencedAssemblies.Add(curr_path+"\\log4net.dll");//log1:缺少AssemblyInfo.cs内配置，无法使用
                 //程序代码
                 String str = WavingProxyCode();
                 //代码生成器执行编译,并生成DLL文件
@@ -76,7 +76,7 @@ namespace LTCingFW
                 Assembly autoAssembly = res.CompiledAssembly;
                 //将生成的dll文件导入到程序集中
                 //Assembly autoAssembly = Assembly.LoadFrom(LTCingFWDllName);
-                //循环载入类
+                //循环加入到实例集合中
                 foreach (FwInstanceBean bean in LTCingFWSet.Beans)
                 {
                     Object inst = autoAssembly.CreateInstance(bean.ProxyType);
@@ -100,8 +100,8 @@ namespace LTCingFW
             //命名空间预设
             StringBuilder sb = new StringBuilder();
             sb.Append(" using System;\n using LTCingFW;\n using System.Threading;\n");
-            //sb.Append(" using log4net;\n");
-            sb.Append(" namespace " + Configs.proxyNameSpace + " { \n ");
+            sb.Append(" using log4net;\n");//log2
+            sb.Append(" namespace " + FWConfigs.proxyNameSpace + " { \n ");
             foreach (FwInstanceBean bean in LTCingFWSet.Beans)
             {
                 #region 代理类
@@ -111,7 +111,7 @@ namespace LTCingFW
                 String[] sps = type_full_name.Split('.');
                 String LTCingFW_proxy_name = "_proxy_" + sps[sps.Length - 1];
                 sb.Append(String.Format(" public class {0} : {1} {{  \n", LTCingFW_proxy_name, type_full_name));
-                //sb.Append(String.Format(" private static readonly ILog logger = LogManager.GetLogger(typeof({0}));", LTCingFW_proxy_name));
+                //3 sb.Append(String.Format(" private static readonly ILog logger = LogManager.GetLogger(typeof({0}));", LTCingFW_proxy_name));
 
                 #region 代理方法
 
@@ -260,7 +260,7 @@ namespace LTCingFW
 
                 //记录日志
                 logger.Info(String.Format("create Proxy for bean[{0}]", bean.Name));
-                bean.ProxyType = Configs.proxyNameSpace + "." + LTCingFW_proxy_name;
+                bean.ProxyType = FWConfigs.proxyNameSpace + "." + LTCingFW_proxy_name;
             }
             //命名空间结束
             sb.Append(" } \n");

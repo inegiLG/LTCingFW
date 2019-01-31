@@ -45,14 +45,14 @@ namespace LTCingFW
         //读取配置文件
         public static void ReadXmlConfigs()
         {
-            if (!System.IO.File.Exists(Configs.XmlFilePath))//判断文件是否存在
+            if (!System.IO.File.Exists(FWConfigs.XmlFilePath))//判断文件是否存在
             {
-                throw new LTCingFWException(Configs.XmlFilePath+"配置文件不存在!");
+                throw new LTCingFWException(FWConfigs.XmlFilePath+"配置文件不存在!");
             }
             //读取配置文件
-            LTCingFWSet.XmlConfigs = FwUtilFunc.DESerializerXmlFile<ConfigStructRoot>(Configs.XmlFilePath);
+            LTCingFWSet.XmlConfigs = FwUtilFunc.DESerializerXmlFile<ConfigStructRoot>(FWConfigs.XmlFilePath);
             //载入文档
-            LTCingFWSet.XmlDoc.Load(Configs.XmlFilePath);
+            LTCingFWSet.XmlDoc.Load(FWConfigs.XmlFilePath);
             foreach (DB_Leaf node in LTCingFWSet.XmlConfigs.DbBranch.DbLeafs)
             {
                 String dbAlias = node.DbAlias.Trim();

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LTCingFW
 {
-    public static class Configs
+    public static class FWConfigs
     {
         /// <summary>
         /// XML配置文件路径
