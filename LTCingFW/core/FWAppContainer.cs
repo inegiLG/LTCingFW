@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace LTCingFW
 {
-    public class AppContainer
+    public class FWAppContainer
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(AppContainer));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(FWAppContainer));
 
         private static readonly Dictionary<string, object> _appContainer = new Dictionary<string, object>();
 

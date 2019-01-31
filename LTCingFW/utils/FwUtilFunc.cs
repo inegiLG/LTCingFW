@@ -374,7 +374,7 @@ namespace LTCingFW.utils
         /// <param name="formName">Form名</param>
         /// <param name="ret"></param>
         public static void CreateValidLabel(string formName, ValidResult ret) {
-            CreateValidLabel((Form)AppContainer.getProperty(formName),ret);
+            CreateValidLabel((Form)FWAppContainer.getProperty(formName),ret);
         }
         /// <summary>
         /// 创建验证的ValidLabel
@@ -420,7 +420,7 @@ namespace LTCingFW.utils
         /// </summary>
         /// <param name="formName">Form名</param>
         public static void RemoveAllValidLabel(string formName) {
-            RemoveAllValidLabel((Form)AppContainer.getProperty(formName));
+            RemoveAllValidLabel((Form)FWAppContainer.getProperty(formName));
         }
         /// <summary>
         /// 移除Panel中的所有ValidLabel
@@ -466,7 +466,7 @@ namespace LTCingFW.utils
         /// <param name="formName">Form名</param>
         /// <param name="ret"></param>
         public static void RemoveValidLabel(string formName, ValidResult ret) {
-            RemoveValidLabel((Form)AppContainer.getProperty(formName), ret);
+            RemoveValidLabel((Form)FWAppContainer.getProperty(formName), ret);
         }
         /// <summary>
         /// 移除某个ValidLabel

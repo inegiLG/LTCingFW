@@ -59,7 +59,7 @@
     <Compile Include="beans\FwInstanceBean.cs" />
     <Compile Include="beans\ThreadContext.cs" />
     <Compile Include="beans\XmlConfigStruct.cs" />
-    <Compile Include="core\AppContainer.cs" />
+    <Compile Include="core\FWAppContainer.cs" />
     <Compile Include="core\FWConfigs.cs" />
     <Compile Include="core\LTCingFWApp.cs" />
     <Compile Include="core\LTCingFWProxy.cs" />
