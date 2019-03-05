@@ -151,7 +151,8 @@ namespace LTCingFW
                     Object obj = LTCingFWSet.Instance[key];
                     Type objt = obj.GetType();
                     //字段注入
-                    FieldInfo[] fis = objt.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
+                    FieldInfo[] fis = objt.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
+                    //FieldInfo[] fis2 = objt.BaseType.GetFields(BindingFlags.NonPublic| BindingFlags.Public | BindingFlags.Instance);
                     foreach (FieldInfo info in fis)
                     {
                         var att = (InjectedAttribute[])info.GetCustomAttributes(typeof(InjectedAttribute), false);

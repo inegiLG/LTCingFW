@@ -234,7 +234,7 @@ namespace LTCingFW
         /// <param name="ValueList"></param>
         /// <param name="onlyPrimaryKey">是否只按照主键查询</param>
         /// <param name="fuzzy">是否为模糊查询</param>
-        public void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey, bool fuzzy)
+        private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey, bool fuzzy)
         {
             //遍历属性值
             foreach (OrmColumnBean bean in model.OrmList)

@@ -51,14 +51,31 @@ namespace LTCingFW
                 parameters.GenerateInMemory = true;
                 //输出文件集合
                 //parameters.OutputAssembly = LTCingFWDllName;
-                //加入当前程序集
-                string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); 
-                parameters.ReferencedAssemblies.Add(curr_assem_name);
-                parameters.ReferencedAssemblies.Add(curr_entry_assem_name);
-                parameters.ReferencedAssemblies.Add("System.dll");
-                parameters.ReferencedAssemblies.Add("System.Data.dll");
-                parameters.ReferencedAssemblies.Add("System.Xml.dll");
-                parameters.ReferencedAssemblies.Add(curr_path+"\\log4net.dll");//log1:缺少AssemblyInfo.cs内配置，无法使用
+                //加入程序集
+                Assembly[] AllAssembly = AppDomain.CurrentDomain.GetAssemblies();
+                AssemblyName[] UsedAssembly = System.Reflection.Assembly.GetEntryAssembly().GetReferencedAssemblies();
+                AssemblyName[] UsedAssembly2 = System.Reflection.Assembly.GetExecutingAssembly().GetReferencedAssemblies();
+                foreach (Assembly item in AllAssembly)
+                {
+                    //foreach (AssemblyName an in UsedAssembly)
+                    //{
+                    //    if (an.FullName == item.FullName)
+                    //    {
+                    //        parameters.ReferencedAssemblies.Add(item.Location);
+                    //    }
+                    //}
+                    if (!item.FullName.Contains("Microsoft.GeneratedCode"))
+                    {
+                        parameters.ReferencedAssemblies.Add(item.Location);
+                    }
+                }
+                //string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); 
+                //parameters.ReferencedAssemblies.Add(curr_assem_name);
+                //parameters.ReferencedAssemblies.Add(curr_entry_assem_name);
+                //parameters.ReferencedAssemblies.Add("System.dll");
+                //parameters.ReferencedAssemblies.Add("System.Data.dll");
+                //parameters.ReferencedAssemblies.Add("System.Xml.dll");
+                //parameters.ReferencedAssemblies.Add(curr_path+"\\log4net.dll");//log1:缺少AssemblyInfo.cs内配置，无法使用
                 //程序代码
                 String str = WavingProxyCode();
                 //代码生成器执行编译,并生成DLL文件
@@ -134,6 +151,9 @@ namespace LTCingFW
                     DBSessionAttribute dbSessionAttr = GetMethodTransactionAttribute(mi);
                     #endregion
 
+                    if (mi.Name == "NoticeDataChangedCallBack")
+                    { }
+
                     #region 设置方法名、参数、返回值还原
                     String OverrideTag = "";
                     if (mi.IsVirtual)
@@ -146,15 +166,21 @@ namespace LTCingFW
                     #region 方法内前置内容
                     ParameterInfo[] paramInfos = mi.GetParameters();
                     StringBuilder paramStr = new StringBuilder(" ");
+                    StringBuilder objStr = new StringBuilder(" ");
                     for (int i = 0; i < paramInfos.Length; i++)
                     {
-                        sb.Append(paramInfos[i].ParameterType).Append(" para").Append(i).Append(" ,");
+                        sb.Append(FwUtilFunc.GetRegularReturnType(paramInfos[i].ParameterType)).Append(" para").Append(i).Append(" ,");
+                        if (paramInfos[i].ParameterType.IsByRef)
+                        {
+                            paramStr.Append(" ref");
+                        }
                         paramStr.Append(" para").Append(i).Append(" ,");
+                        objStr.Append(" para").Append(i).Append(" ,");
                     }
                     paramStr.Remove(paramStr.Length - 1, 1);
                     sb.Remove(sb.Length - 1, 1);
                     sb.Append("){\n");
-                    sb.Append(" object[] paras = new object[]{ ").Append(paramStr).Append("};\n");
+                    sb.Append(" object[] paras = new object[]{ ").Append(objStr).Append("};\n");
                     sb.Append(" bool outerSession = false;\n");
                     sb.Append(" DBSession session = null;\n");
                     if (mi.ReturnType.FullName != "System.Void") {

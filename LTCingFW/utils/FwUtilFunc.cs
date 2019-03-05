@@ -282,11 +282,21 @@ namespace LTCingFW.utils
                     }
                     else if (value is System.DateTime) {
                         //Date
-                        info.SetValue(model, ( (System.DateTime)value ).ToString("yyyy-MM-dd HH:mm:ss"));
+                        info.SetValue(model, (Convert.ToDateTime(value)).ToString("yyyy-MM-dd HH:mm:ss"));
+                    }
+                    else if (value is System.Boolean)
+                    {
+                        //Boolean
+                        if ((bool)value) {
+                            info.SetValue(model, "1");
+                        }
+                        else{
+                            info.SetValue(model, "0");
+                        }
                     }
                     else {
                         //Decimal和String
-                        info.SetValue(model, value);
+                        info.SetValue(model, Convert.ToString(value));
                     }
                     
 
@@ -368,6 +378,40 @@ namespace LTCingFW.utils
 
 
         #region valid验证使用
+        /// <summary>
+        /// 验证Form的ViewModel
+        /// </summary>
+        /// <param name="form">BaseForm</param>
+        /// <returns></returns>
+        public static bool ValidForm(BaseForm form)
+        {
+
+            bool validFlag = true;
+            List<ValidResult> validList = ValidationFunc.ValidAll(form.Model);
+            if (validList == null)
+            {
+                MessageBox.Show("验证内部错误！");
+                validFlag = false;
+            }
+            else
+            {
+                foreach (ValidResult ret in validList)
+                {
+                    if (ret.Result)
+                    {
+                        //消除验证结果信息
+                        RemoveValidLabel(form, ret);
+                    }
+                    else
+                    {
+                        //添加验证结果信息
+                        CreateValidLabel(form, ret);
+                        validFlag = false;
+                    }
+                }
+            }
+            return validFlag;
+        }
         /// <summary>
         /// 创建验证的ValidLabel
         /// </summary>
@@ -720,9 +764,12 @@ namespace LTCingFW.utils
 
         public static string GetRegularReturnType(Type ReturnType)
         {
+            string returnStr = ReturnType.FullName;
+            //Void
             if (ReturnType.Name == "Void") {
-                return "void";
+                returnStr = "void";
             }
+            //List<T>
             if (ReturnType.Name == "List`1") {
                 Type[] gs = ReturnType.GetGenericArguments();
                 StringBuilder sb = new StringBuilder();
@@ -738,10 +785,19 @@ namespace LTCingFW.utils
                 }
                 sb.Remove(sb.Length-1 ,1);
                 sb.Append(">");
-                return sb.ToString();
+                returnStr = sb.ToString();
             }
-
-            return ReturnType.FullName;
+            //Array
+            if (ReturnType.Name.Contains("Array&"))
+            {
+                returnStr = "System.Array";
+            }
+            //ref 前缀
+            if (ReturnType.IsByRef)
+            {
+                returnStr = "ref " + returnStr;
+            }
+            return returnStr;
         }
 
 

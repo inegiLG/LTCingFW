@@ -34,7 +34,8 @@
     <Reference Include="log4net">
       <HintPath>..\..\..\引用DLL\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Oracle.ManagedDataAccess">
+    <Reference Include="Oracle.ManagedDataAccess, Version=4.122.18.3, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\引用DLL\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -65,6 +66,18 @@
     <Compile Include="core\LTCingFWProxy.cs" />
     <Compile Include="core\LTCingFWSet.cs" />
     <Compile Include="exceptions\LTCingFWException.cs" />
+    <Compile Include="opc\BaseCommandService.cs" />
+    <Compile Include="opc\CommandStateEnum.cs" />
+    <Compile Include="opc\CommandTypeEnum.cs" />
+    <Compile Include="opc\ItemInfo.cs" />
+    <Compile Include="opc\ItemStateEnum.cs" />
+    <Compile Include="opc\OPCAcknowledgeHandler.cs" />
+    <Compile Include="opc\OPCAckonwledgeInterface.cs" />
+    <Compile Include="opc\OPCCommand.cs" />
+    <Compile Include="opc\OPCControl.cs" />
+    <Compile Include="opc\OPCServerRWException.cs" />
+    <Compile Include="opc\StaticUtils.cs" />
+    <Compile Include="opc\XmlCommandConfig.cs" />
     <Compile Include="orm\attributes\OrmColumnAttribute.cs" />
     <Compile Include="orm\attributes\OrmForeignAttribute.cs" />
     <Compile Include="orm\attributes\OrmTableAttribute.cs" />
@@ -99,6 +112,17 @@
     <EmbeddedResource Include="viewmodel\BaseForm.resx">
       <DependentUpon>BaseForm.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="OPCAutomation">
+      <Guid>{28E68F91-8D75-11D1-8DC3-3C302A000000}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
