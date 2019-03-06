@@ -178,6 +178,51 @@ namespace LTCingFW
             BinaryFloat = 133,
             Boolean = 134
         }
+        public enum MySqlDbType
+        {
+            //数字类
+            BIT = 201,
+            BOOL = 202,
+            TINYINT = 203,
+            SMALLINT = 204,
+            MEDIUMINT = 205,
+            INT = 206,
+            BIGINT = 207,
+            //浮点类型
+            FLOAT = 208,
+            DOUBLE =209,
+            DECIMAL =210,
+            //字符串类型
+            CHAR = 211,
+            VARCHAR = 212,
+            TINYTEXT =213,
+            TEXT = 214,
+            MEDIUMTEXT = 215,
+            LONGTEXT = 216,
+            TINYBLOB = 217,
+            BLOB = 218,
+            MEDIUMBLOB =219,
+            LONGBLOB = 220,
+            //日期类
+            DATE = 221,
+            DATETIME = 222,
+            TIMESTAMP = 223,
+            TIME = 224,
+            YEAR = 225,
+            //其他类型
+            BINARY = 226,
+            VARBINARY = 227,
+            ENUM = 228,
+            SET = 229,
+            GEOMETRY = 230,
+            POINT = 231,
+            MULTIPOINT =232,
+            LINESTRING = 233,
+            MULTILINESTRING = 234,
+            POLYGON = 235,
+            GEOMETRYCOLLECTION = 236
+        }
+
     }
 
    

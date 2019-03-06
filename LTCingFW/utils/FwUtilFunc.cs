@@ -1,5 +1,6 @@
 ﻿using log4net;
 using Microsoft.Win32;
+//using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
@@ -651,7 +652,41 @@ namespace LTCingFW.utils
             }
             return false;
         }
-
+        //public static bool mysqlTypeIsString(int typeInt)
+        //{
+        //    if ((MySqlDbType)typeInt == MySqlDbType.VarString || (MySqlDbType)typeInt == MySqlDbType.VarChar
+        //        || (MySqlDbType)typeInt == MySqlDbType.String || (MySqlDbType)typeInt == MySqlDbType.TinyText
+        //        || (MySqlDbType)typeInt == MySqlDbType.MediumText || (MySqlDbType)typeInt == MySqlDbType.Text)
+        //    {
+        //        return true;
+        //    }
+        //    return false;
+        //}
+        //public static bool mysqlTypeIsDate(int typeInt)
+        //{
+        //    if ((MySqlDbType)typeInt == MySqlDbType.Timestamp || (MySqlDbType)typeInt == MySqlDbType.Date
+        //        || (MySqlDbType)typeInt == MySqlDbType.Time || (MySqlDbType)typeInt == MySqlDbType.DateTime
+        //        || (MySqlDbType)typeInt == MySqlDbType.Year || (MySqlDbType)typeInt == MySqlDbType.Newdate)
+        //    {
+        //        return true;
+        //    }
+        //    return false;
+        //}
+        //public static bool mysqlTypeIsNumber(int typeInt)
+        //{
+        //    if ( (MySqlDbType)typeInt == MySqlDbType.Decimal || (MySqlDbType)typeInt == MySqlDbType.Byte
+        //                        || (MySqlDbType)typeInt == MySqlDbType.Int16 || (MySqlDbType)typeInt == MySqlDbType.Int32
+        //                        || (MySqlDbType)typeInt == MySqlDbType.Float || (MySqlDbType)typeInt == MySqlDbType.Double
+        //                        || (MySqlDbType)typeInt == MySqlDbType.Int64 || (MySqlDbType)typeInt == MySqlDbType.Int24
+        //                        || (MySqlDbType)typeInt == MySqlDbType.Bit || (MySqlDbType)typeInt == MySqlDbType.NewDecimal
+        //                        || (MySqlDbType)typeInt == MySqlDbType.UByte || (MySqlDbType)typeInt == MySqlDbType.UInt16
+        //                        || (MySqlDbType)typeInt == MySqlDbType.UInt32 || (MySqlDbType)typeInt == MySqlDbType.UInt64
+        //                        || (MySqlDbType)typeInt == MySqlDbType.UInt24 )
+        //    {
+        //        return true;
+        //    }
+        //    return false;
+        //}
         /// <summary>
         /// XML序列化，将类或List或DataTable转为XML
         /// </summary>
