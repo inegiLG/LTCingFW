@@ -236,13 +236,19 @@ namespace LTCingFW
         /// <param name="fuzzy">是否为模糊查询</param>
         private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey, bool fuzzy)
         {
+            bool hasPrimaryKey = false;
             //遍历属性值
             foreach (OrmColumnBean bean in model.OrmList)
             {
+                
                 if (FwUtilFunc.StringIsNotEmpty((string)bean.Value))
                 {
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                    if (attr.PrimaryKey && bean.Value != null )
+                    {
+                        hasPrimaryKey = true;
+                    }
                     //oracle
                     if (session.Connection is OracleConnection)
                     {
@@ -323,6 +329,9 @@ namespace LTCingFW
                     }
                     //mysql未实现
                 }
+            }
+            if (onlyPrimaryKey && !hasPrimaryKey) {
+                throw new LTCingFWException("按照主键查询未找到主键或主键值为空！");
             }
 
         }
