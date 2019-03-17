@@ -14,6 +14,7 @@ using System.Threading;
 using System.Data.Common;
 using Oracle.ManagedDataAccess.Client;
 using System.Data.SqlClient;
+using MySql.Data.MySqlClient;
 
 namespace LTCingFW
 {
@@ -63,34 +64,69 @@ namespace LTCingFW
                     if (dbtype == "oracle")
                     {
                         OracleConnectionStringBuilder info = new OracleConnectionStringBuilder();
-                        info.DataSource = node.DataSource.Trim();
-                        info.UserID = node.UserID.Trim();
-                        info.Password = node.Password.Trim();
-                        info.ConnectionTimeout = int.Parse(node.ConnectionTimeout.Trim());
-                        info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                        info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
-                        info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
-                        info.IncrPoolSize = int.Parse(node.IncrPoolSize.Trim());
-                        info.DecrPoolSize = int.Parse(node.DecrPoolSize.Trim());
+                        if (node.ConnectionString!= null && node.ConnectionString.Trim() != "")
+                        {
+                            info.ConnectionString = node.ConnectionString.Trim();
+                        }
+                        else
+                        {
+                            info.DataSource = node.DataSource.Trim();
+                            info.UserID = node.UserID.Trim();
+                            info.Password = node.Password.Trim();
+                            info.ConnectionTimeout = int.Parse(node.ConnectionTimeout.Trim());
+                            info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
+                            info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
+                            info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
+                            info.IncrPoolSize = int.Parse(node.IncrPoolSize.Trim());
+                            info.DecrPoolSize = int.Parse(node.DecrPoolSize.Trim());
+                        }
                         dbConnectionStringBuilder = info;
                     }
                     else if (dbtype == "sqlserver")
                     {
                         SqlConnectionStringBuilder info = new SqlConnectionStringBuilder();
-                        info.DataSource = node.DataSource.Trim();
-                        if (node.InitialCatalog.Trim() != "")
+                        if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
                         {
-                            info.InitialCatalog = node.InitialCatalog.Trim();
+                            info.ConnectionString = node.ConnectionString.Trim();
                         }
-                        info.UserID = node.UserID.Trim();
-                        info.Password = node.Password.Trim();
-                        info.ConnectTimeout = int.Parse(node.ConnectionTimeout.Trim());
-                        info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                        info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
-                        info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
+                        else
+                        {
+                            info.DataSource = node.DataSource.Trim();
+                            if (node.InitialCatalog.Trim() != "")
+                            {
+                                info.InitialCatalog = node.InitialCatalog.Trim();
+                            }
+                            info.UserID = node.UserID.Trim();
+                            info.Password = node.Password.Trim();
+                            info.ConnectTimeout = int.Parse(node.ConnectionTimeout.Trim());
+                            info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
+                            info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
+                            info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
+                        }
                         dbConnectionStringBuilder = info;
                     }
-                    else
+                    else if (dbtype == "mysql")
+                    {
+                        
+                        MySqlConnectionStringBuilder info = new MySqlConnectionStringBuilder();
+                        if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
+                        {
+                            info.ConnectionString = node.ConnectionString.Trim();
+                        }
+                        else
+                        {
+                            info.Server = node.DataSource.Trim();
+                            info.Database = node.Database.Trim();
+                            info.UserID = node.UserID.Trim();
+                            info.Password = node.Password.Trim();
+                            info.ConnectionTimeout = uint.Parse(node.ConnectionTimeout.Trim());
+                            info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
+                            info.MaximumPoolSize = uint.Parse(node.MaxPoolSize.Trim());
+                            info.MinimumPoolSize = uint.Parse(node.MinPoolSize.Trim());
+                        }
+                        dbConnectionStringBuilder = info;
+                    }
+                    else 
                     {
                         throw new LTCingFWException(dbtype+"为不支持的数据库类型。");
 

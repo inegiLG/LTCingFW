@@ -1,6 +1,5 @@
 ﻿using log4net;
 using Microsoft.Win32;
-//using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
@@ -17,6 +16,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
+using static LTCingFW.OrmDataType;
+using OracleDbType = LTCingFW.OrmDataType.OracleDbType;
+using SqlDbType = LTCingFW.OrmDataType.SqlDbType;
 
 namespace LTCingFW.utils
 {
@@ -652,41 +654,40 @@ namespace LTCingFW.utils
             }
             return false;
         }
-        //public static bool mysqlTypeIsString(int typeInt)
-        //{
-        //    if ((MySqlDbType)typeInt == MySqlDbType.VarString || (MySqlDbType)typeInt == MySqlDbType.VarChar
-        //        || (MySqlDbType)typeInt == MySqlDbType.String || (MySqlDbType)typeInt == MySqlDbType.TinyText
-        //        || (MySqlDbType)typeInt == MySqlDbType.MediumText || (MySqlDbType)typeInt == MySqlDbType.Text)
-        //    {
-        //        return true;
-        //    }
-        //    return false;
-        //}
-        //public static bool mysqlTypeIsDate(int typeInt)
-        //{
-        //    if ((MySqlDbType)typeInt == MySqlDbType.Timestamp || (MySqlDbType)typeInt == MySqlDbType.Date
-        //        || (MySqlDbType)typeInt == MySqlDbType.Time || (MySqlDbType)typeInt == MySqlDbType.DateTime
-        //        || (MySqlDbType)typeInt == MySqlDbType.Year || (MySqlDbType)typeInt == MySqlDbType.Newdate)
-        //    {
-        //        return true;
-        //    }
-        //    return false;
-        //}
-        //public static bool mysqlTypeIsNumber(int typeInt)
-        //{
-        //    if ( (MySqlDbType)typeInt == MySqlDbType.Decimal || (MySqlDbType)typeInt == MySqlDbType.Byte
-        //                        || (MySqlDbType)typeInt == MySqlDbType.Int16 || (MySqlDbType)typeInt == MySqlDbType.Int32
-        //                        || (MySqlDbType)typeInt == MySqlDbType.Float || (MySqlDbType)typeInt == MySqlDbType.Double
-        //                        || (MySqlDbType)typeInt == MySqlDbType.Int64 || (MySqlDbType)typeInt == MySqlDbType.Int24
-        //                        || (MySqlDbType)typeInt == MySqlDbType.Bit || (MySqlDbType)typeInt == MySqlDbType.NewDecimal
-        //                        || (MySqlDbType)typeInt == MySqlDbType.UByte || (MySqlDbType)typeInt == MySqlDbType.UInt16
-        //                        || (MySqlDbType)typeInt == MySqlDbType.UInt32 || (MySqlDbType)typeInt == MySqlDbType.UInt64
-        //                        || (MySqlDbType)typeInt == MySqlDbType.UInt24 )
-        //    {
-        //        return true;
-        //    }
-        //    return false;
-        //}
+        public static bool mysqlTypeIsString(int typeInt)
+        {
+            if ((MySqlDbType)typeInt == MySqlDbType.CHAR || (MySqlDbType)typeInt == MySqlDbType.VARCHAR
+                || (MySqlDbType)typeInt == MySqlDbType.TINYTEXT || (MySqlDbType)typeInt == MySqlDbType.TEXT
+                || (MySqlDbType)typeInt == MySqlDbType.MEDIUMTEXT || (MySqlDbType)typeInt == MySqlDbType.LONGTEXT
+                || (MySqlDbType)typeInt == MySqlDbType.TINYBLOB || (MySqlDbType)typeInt == MySqlDbType.BLOB
+                || (MySqlDbType)typeInt == MySqlDbType.MEDIUMBLOB || (MySqlDbType)typeInt == MySqlDbType.LONGBLOB)
+            {
+                return true;
+            }
+            return false;
+        }
+        public static bool mysqlTypeIsDate(int typeInt)
+        {
+            if ((MySqlDbType)typeInt == MySqlDbType.DATE || (MySqlDbType)typeInt == MySqlDbType.DATETIME
+                || (MySqlDbType)typeInt == MySqlDbType.TIMESTAMP || (MySqlDbType)typeInt == MySqlDbType.TIME
+                || (MySqlDbType)typeInt == MySqlDbType.YEAR )
+            {
+                return true;
+            }
+            return false;
+        }
+        public static bool mysqlTypeIsNumber(int typeInt)
+        {
+            if ((MySqlDbType)typeInt == MySqlDbType.BIT || (MySqlDbType)typeInt == MySqlDbType.BOOL
+                                || (MySqlDbType)typeInt == MySqlDbType.TINYINT || (MySqlDbType)typeInt == MySqlDbType.SMALLINT
+                                || (MySqlDbType)typeInt == MySqlDbType.MEDIUMINT || (MySqlDbType)typeInt == MySqlDbType.INT
+                                || (MySqlDbType)typeInt == MySqlDbType.BIGINT || (MySqlDbType)typeInt == MySqlDbType.FLOAT
+                                || (MySqlDbType)typeInt == MySqlDbType.DOUBLE || (MySqlDbType)typeInt == MySqlDbType.DECIMAL)
+            {
+                return true;
+            }
+            return false;
+        }
         /// <summary>
         /// XML序列化，将类或List或DataTable转为XML
         /// </summary>

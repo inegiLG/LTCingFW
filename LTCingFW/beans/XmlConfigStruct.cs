@@ -62,7 +62,7 @@ namespace LTCingFW
         [XmlAttribute(AttributeName = "dbAlias")]
         public string DbAlias { get; set; }
         [XmlElement(ElementName = "dbtype", IsNullable = false)]
-        public string DbType { get; set; }//oracle or sqlserver
+        public string DbType { get; set; }//oracle or sqlserver or mysql
         [XmlElement(ElementName = "datasource", IsNullable = false)]
         public string DataSource { get; set; }
         [XmlElement(ElementName = "userid", IsNullable = false)]
@@ -89,6 +89,10 @@ namespace LTCingFW
         public string ProxyPassword { get; set; }
         [XmlElement(ElementName = "proxyuserId", IsNullable = true)]
         public string ProxyUserId { get; set; }
+        [XmlElement(ElementName = "database", IsNullable = true)]
+        public string Database { get; set; }
+        [XmlElement(ElementName = "connectionstring", IsNullable = true)]
+        public string ConnectionString { get; set; }
 
         public const String OracleDBType = "oracle";
         public const String SqlServerDBType = "sqlserver";

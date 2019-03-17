@@ -561,7 +561,10 @@ namespace LTCingFW.opc
         /// </summary>
         public static void Disconnect()
         {
-            op_server_control.DisConnect();
+            if (op_server_control != null)
+            {
+                op_server_control.DisConnect();
+            }
         }
         /// <summary>
         /// XML的Command对应类

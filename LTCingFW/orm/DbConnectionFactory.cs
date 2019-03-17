@@ -1,4 +1,5 @@
 ﻿using log4net;
+using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
@@ -38,6 +39,13 @@ namespace LTCingFW
                     return conn;
                 }
                 //MYSQL未实现
+                if (info is MySqlConnectionStringBuilder)
+                {
+                    MySqlConnection conn = new MySqlConnection();
+                    conn.ConnectionString = ((MySqlConnectionStringBuilder)info).ConnectionString;
+                    conn.Open();
+                    return conn;
+                }
 
             }
             catch (Exception e)
@@ -58,11 +66,19 @@ namespace LTCingFW
                 OracleDataAdapter adapter = new OracleDataAdapter(sql, (OracleConnection)conn);
                 return adapter;
             }
-            if (conn is SqlConnection) {
+            else if (conn is SqlConnection) {
                 SqlDataAdapter adapter = new SqlDataAdapter(sql, (SqlConnection)conn);
                 return adapter;
             }
-            return null;
+            else if (conn is MySqlConnection)
+            {
+                MySqlDataAdapter adapter = new MySqlDataAdapter(sql, (MySqlConnection)conn);
+                return adapter;
+            }
+            else
+            {
+                throw new LTCingFWException("不支持的数据适配器，不支持该数据库类型！");
+            }
         }
 
 

@@ -11,6 +11,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using MySql.Data.MySqlClient;
 
 namespace LTCingFW
 {
@@ -68,21 +69,70 @@ namespace LTCingFW
             StringBuilder sb = new StringBuilder();
             foreach (OrmColumnBean bean in model.OrmList)
             {
+                if (bean.Value == null)
+                {
+                    continue;
+                }
                 OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                 if (session.Connection is OracleConnection)
                 {
-                        sb.Append(':').Append(attr.ColName).Append(',');
+                    sb.Append(':').Append(attr.ColName).Append(',');
                 }
                 if (session.Connection is SqlConnection)
                 {
                     sb.Append('@').Append(attr.ColName).Append(',');
                 }
-
+                if (session.Connection is MySqlConnection)
+                {
+                    sb.Append('@').Append(attr.ColName).Append(',');
+                }
             }
             sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
             return sb.ToString();
         }
-
+        /// <summary>
+        /// 获取插入的值SQL和ValueList
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <param name="ValueList"></param>
+        /// <param name="sqlText"></param>
+        private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList,StringBuilder sqlText)
+        {
+            foreach (OrmColumnBean bean in model.OrmList)
+            {
+                DbParameter param = null;
+                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                string mark = "@";
+                if (session.Connection is OracleConnection)
+                {
+                    mark = ":";
+                    param = new OracleParameter();
+                }
+                else if (session.Connection is SqlConnection)
+                {
+                    param = new SqlParameter();
+                }
+                else if (session.Connection is MySqlConnection)
+                {
+                    param = new MySqlParameter();
+                }
+                else
+                {
+                    throw new LTCingFWException("不支持该数据库！");
+                }
+                if (attr.ColSize == 0)
+                {
+                    param.Size = attr.ColSize;
+                }
+                param.ParameterName = mark + attr.ColName;
+                param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                ValueList.Add(param);
+                sqlText.Append(mark).Append(attr.ColName).Append(",");
+            }
+            sqlText.Remove(sqlText.Length - 1, 1);
+            sqlText.Append(")");
+        }
         /// <summary>
         /// 获取更新时的SET语句的SQL字符串
         /// </summary>
@@ -97,15 +147,27 @@ namespace LTCingFW
                 OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                 if (!attr.PrimaryKey)
                 {
+                    if (bean.Value == null)
+                    {
+                        continue;
+                    }
                     if (session.Connection is OracleConnection)
                     {
-                            sb.Append(" ").Append(attr.ColName).Append('=').Append(':').Append(attr.ColName).Append(",");
+                        sb.Append(" ").Append(attr.ColName).Append('=').Append(':').Append(attr.ColName).Append(",");
                     }
                     if (session.Connection is SqlConnection)
                     {
                         sb.Append(" ").Append(attr.ColName).Append('=').Append('@').Append(attr.ColName).Append(",");
                     }
+                    if (session.Connection is MySqlConnection)
+                    {
+                        sb.Append(" ").Append(attr.ColName).Append('=').Append('@').Append(attr.ColName).Append(",");
+                    }
                 }
+            }
+            if (sb.Length == 0)
+            {
+                throw new LTCingFWException("非主键列无更新值！");
             }
             sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
             return sb.ToString();
@@ -123,44 +185,38 @@ namespace LTCingFW
             {
                 DbParameter param = null;
                 OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-
-                //oracle
-                if (session.Connection is OracleConnection)
+                if (!attr.PrimaryKey)
                 {
-                    if (!attr.PrimaryKey)
+                    if (bean.Value == null)
                     {
-                        if (attr.ColSize == 0)
-                        {
-                            param = new OracleParameter(":" + attr.ColName, (OracleDbType)attr.ColType);
-                        }
-                        else
-                        {
-                            param = new OracleParameter(":" + attr.ColName, (OracleDbType)attr.ColType, attr.ColSize);
-                        }
-                        param.Value = getProperDbParameterValue( bean.Value, attr.ColType);
-                        ValueList.Add(param);
+                        continue;
                     }
-
-                }
-                //sqlserver
-                if (session.Connection is SqlConnection)
-                {
-                    if (!attr.PrimaryKey)
+                    string mark = "@";
+                    if (session.Connection is OracleConnection)
                     {
-                        if (attr.ColSize == 0)
-                        {
-                            param = new SqlParameter("@" + attr.ColName, (SqlDbType)attr.ColType);
-                        }
-                        else
-                        {
-                            param = new SqlParameter("@" + attr.ColName, (SqlDbType)attr.ColType, attr.ColSize);
-                        }
-                        param.Value = getProperDbParameterValue(bean.Value,attr.ColType);
-                        ValueList.Add(param);
+                        mark = ":";
+                        param = new OracleParameter();
                     }
+                    else if (session.Connection is SqlConnection)
+                    {
+                        param = new SqlParameter();
+                    }
+                    else if (session.Connection is MySqlConnection)
+                    {
+                        param = new MySqlParameter();
+                    }
+                    else
+                    {
+                        throw new LTCingFWException("不支持该数据库！");
+                    }
+                    if (attr.ColSize == 0)
+                    {
+                        param.Size = attr.ColSize;
+                    }
+                    param.ParameterName = mark + attr.ColName;
+                    param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                    ValueList.Add(param);
                 }
-                //mysql未实现
-
 
             }
         }
@@ -172,7 +228,7 @@ namespace LTCingFW
         /// <returns></returns>
         private object getProperDbParameterValue( object value ,int colType) {
             //空
-            if (value == null) {
+            if (value == null || value is System.DBNull) {
                 return System.DBNull.Value;
             }
             //以字符串模拟其他类型
@@ -210,6 +266,18 @@ namespace LTCingFW
                     return Convert.ToDateTime(val);//使用DateTime
                 }
                 //MySql未实现
+                else if (FwUtilFunc.mysqlTypeIsString(colType))
+                {
+                    return value;
+                }
+                else if (FwUtilFunc.mysqlTypeIsNumber(colType))
+                {
+                    return Decimal.Parse(val);
+                }
+                else if (FwUtilFunc.mysqlTypeIsDate(colType))
+                {
+                    return Convert.ToDateTime(val);//使用DateTime
+                }
                 else {
                     throw new LTCingFWException(String.Format("无法将String类型的模拟值转换为数据库的{0}类型",colType));
                 }
@@ -219,11 +287,11 @@ namespace LTCingFW
                 return value;
             }
         }
-        //默认与主键无关，用于查询
-        private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
-        {
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyPrimaryKey, false);
-        }
+        ////默认与主键无关，用于查询
+        //private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
+        //{
+        //    SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyPrimaryKey);
+        //}
 
         /// <summary>
         /// 获取查询的WHERE部分sql语句和Values
@@ -234,7 +302,7 @@ namespace LTCingFW
         /// <param name="ValueList"></param>
         /// <param name="onlyPrimaryKey">是否只按照主键查询</param>
         /// <param name="fuzzy">是否为模糊查询</param>
-        private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey, bool fuzzy)
+        private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
         {
             bool hasPrimaryKey = false;
             //遍历属性值
@@ -249,85 +317,49 @@ namespace LTCingFW
                     {
                         hasPrimaryKey = true;
                     }
-                    //oracle
-                    if (session.Connection is OracleConnection)
+                    
+                    if (onlyPrimaryKey && !attr.PrimaryKey) { }
+                    else 
                     {
-                        if (onlyPrimaryKey && !attr.PrimaryKey) { }
+                        string mark = "@";
+                        if (session.Connection is OracleConnection)
+                        {
+                            param = new OracleParameter();
+                            mark = ":";
+                        }
+                        else if (session.Connection is SqlConnection)
+                        {
+                            param = new SqlParameter();
+                        }
+                        else if (session.Connection is MySqlConnection)
+                        {
+                            param = new MySqlParameter();
+                        }
+                        else
+                        {
+                            throw new LTCingFWException("只接受Oracle SqlServer MySql 的连接！");
+                        }
+                        
+                        param.ParameterName = mark + attr.ColName;
+                        if (attr.ColSize != 0)
+                        {
+                            param.Size = attr.ColSize;
+                        }
+                        if (model.FuzzyColumnNames.Contains(bean.ColumnName) )
+                        {
+                            sqlText.Append(" AND ").Append(attr.ColName).Append(" LIKE ").Append(mark).Append(attr.ColName);
+                            param.Value = "%" + getProperDbParameterValue(bean.Value,attr.ColType) + "%";
+                            ValueList.Add(param);
+                        }
                         else 
                         {
-                            if (attr.ColSize == 0)
-                            {
-                                param = new OracleParameter(":" + attr.ColName, (OracleDbType)attr.ColType);
-                            }
-                            else
-                            {
-                                param = new OracleParameter(":" + attr.ColName, (OracleDbType)attr.ColType, attr.ColSize);
-                            }
-                            if (FwUtilFunc.oracleTypeIsString(attr.ColType))
-                            {
-                                if (fuzzy)
-                                {
-                                    sqlText.Append(" AND ").Append(attr.ColName).Append(" LIKE :").Append(attr.ColName);
-                                    param.Value = "%" + getProperDbParameterValue(bean.Value,attr.ColType) + "%";
-                                    ValueList.Add(param);
-                                }
-                                else
-                                {
-                                    sqlText.Append(" AND ").Append(attr.ColName).Append(" = :").Append(attr.ColName);
-                                    param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
-                                    ValueList.Add(param);
-                                }
-                            }
-                            else //(oracleTypeIsNumber(attr.ColType))
-                            {
-                                sqlText.Append(" AND ").Append(attr.ColName).Append(" = :").Append(attr.ColName);
-                                param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
-                                ValueList.Add(param);
-                            }
-                            
+                            sqlText.Append(" AND ").Append(attr.ColName).Append(" = ").Append(mark).Append(attr.ColName);
+                            param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                            ValueList.Add(param);
                         }
-
-                    }
-                    //sqlserver
-                    if (session.Connection is SqlConnection)
-                    {
-                        if (onlyPrimaryKey && !attr.PrimaryKey) { }
-                        else 
-                        {
-                            if (attr.ColSize == 0)
-                            {
-                                param = new SqlParameter("@" + attr.ColName, (SqlDbType)attr.ColType);
-                            }
-                            else
-                            {
-                                param = new SqlParameter("@" + attr.ColName, (SqlDbType)attr.ColType, attr.ColSize);
-                            }
-                            if (FwUtilFunc.sqlserverTypeIsString(attr.ColType))
-                            {
-                                if (fuzzy)
-                                {
-                                    sqlText.Append(" AND ").Append(attr.ColName).Append(" LIKE @").Append(attr.ColName);
-                                    param.Value = "%" + getProperDbParameterValue(bean.Value, attr.ColType) + "%";
-                                    ValueList.Add(param);
-                                }
-                                else
-                                {
-                                    sqlText.Append(" AND ").Append(attr.ColName).Append(" = @").Append(attr.ColName);
-                                    param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
-                                    ValueList.Add(param);
-                                }
-                            }
-                            else //(sqlserverTypeIsNumber(attr.ColType))
-                            {
-                                sqlText.Append(" AND ").Append(attr.ColName).Append(" = @").Append(attr.ColName);
-                                param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
-                                ValueList.Add(param);
-                            }
                             
-                        }
-
                     }
-                    //mysql未实现
+                    
                 }
             }
             if (onlyPrimaryKey && !hasPrimaryKey) {
@@ -341,7 +373,7 @@ namespace LTCingFW
             StringBuilder sql = new StringBuilder();
             sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
             List<DbParameter> ValueList = new List<DbParameter>();
-            SetModelWhereSqlTextAndValues(session, model, sql, ValueList, false,true);
+            SetModelWhereSqlTextAndValues(session, model, sql, ValueList, false);
             DbCommand cmd = session.Connection.CreateCommand();
             cmd.CommandText = sql.ToString();
             cmd.Parameters.AddRange(ValueList.ToArray());
@@ -364,14 +396,27 @@ namespace LTCingFW
             int min_limit = model.LowLimitNumber;
             String allColumnString = GetAllColumnNameStr(session, model);
             StringBuilder sb = new StringBuilder();
+            String orderby = "";
+            if (FwUtilFunc.StringIsEmpty(model.OrderBy))
+            {
+                foreach (OrmColumnBean  bean in model.OrmList)
+                {
+                    if (bean.OrmColumnAttributeDic[session.DbAlias].PrimaryKey)
+                    {
+                        orderby = " " + bean.ColumnName + " DESC ";
+                    }
+                }
+            }
+            else
+            {
+                orderby = model.OrderBy;
+            }
 
             //oracle
             if (session.Connection is OracleConnection)
             {
-                if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
-                {
-                    sql = sql + " ORDER BY " + model.OrderBy;
-                }
+                
+                sql = sql + " ORDER BY " + orderby;
                 sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
                 sb.Append(" ( SELECT ").Append(" ROWNUM RN , ").Append(allColumnString);
                 sb.Append(" FROM ( ").Append(sql).Append(" ) ").Append(" WHERE ROWNUM <= ").Append(max_limit).Append(" ) ");
@@ -382,11 +427,17 @@ namespace LTCingFW
             if (session.Connection is SqlConnection)
             {
                 sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
-                sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER(").Append(model.OrderBy).Append(" ) RN, ");
-                sb.Append(allColumnString).Append(" FROM ( ").Append(sql).Append(" ) ) w2 ");
+                sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER( ORDER BY ").Append(orderby).Append(" ) RN, ");
+                sb.Append(allColumnString).Append(" FROM ( ").Append(sql).Append(" ) t ) w2 ");
                 sb.Append(" WHERE w2.RN >= ").Append(min_limit);
-                sb.Append(" ORDER BY w2.n ASC ");
+                sb.Append(" ORDER BY w2.RN ASC ");
 
+            }
+            //mysql
+            if (session.Connection is MySqlConnection)
+            {
+                sql = sql + " ORDER BY " + orderby;
+                sb.Append(sql).Append(" LIMIT ").Append(min_limit) .Append(",").Append(max_limit);
             }
 
             return sb.ToString();
@@ -409,14 +460,14 @@ namespace LTCingFW
                 sqlText.Append(" DISTINCT ");
             }
             sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false, true);
+            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
             if (FwUtilFunc.StringIsNotEmpty(model.Where))
             {
                 sqlText.Append(" AND ").Append(model.Where);
             }
 
             String pageSql = addPaginationSql(sqlText.ToString(), session, model);
-            #region 缓存
+            #region 缓存(分页不用)
             //if (CacheFactory.IsCached(session, model))
             //{
             //   DataTable cache = CacheFactory.GetTabelCache(pageSql);
@@ -667,54 +718,9 @@ namespace LTCingFW
             sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ( ");
             List<DbParameter> ValueList = new List<DbParameter>();
 
-            foreach (OrmColumnBean bean in model.OrmList)
-            {
+            GetInsertColumnValues(session,model,ValueList,sqlText);
 
-                DbParameter param = null;
-                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                //oracle
-                if (conn is OracleConnection)
-                {
-
-                    sqlText.Append(" :").Append(attr.ColName).Append(",");
-                    if (attr.ColSize == 0)
-                    {
-                        param = new OracleParameter(":" + attr.ColName, (OracleDbType)attr.ColType);
-                        param.Value = getProperDbParameterValue( bean.Value, attr.ColType);
-                        ValueList.Add(param);
-                    }
-                    else
-                    {
-                        param = new OracleParameter(":" + attr.ColName, (OracleDbType)attr.ColType, attr.ColSize);
-                        param.Value = getProperDbParameterValue( bean.Value, attr.ColType);
-                        ValueList.Add(param);
-                    }
-
-                }
-                //sqlserver
-                if (conn is SqlConnection)
-                {
-                    sqlText.Append(" @").Append(attr.ColName).Append(",");
-                    if (attr.ColSize == 0)
-                    {
-                        param = new SqlParameter("@" + attr.ColName, (SqlDbType)attr.ColType);
-                        param.Value = getProperDbParameterValue( bean.Value, attr.ColType);
-                        ValueList.Add(param);
-                    }
-                    else
-                    {
-                        param = new SqlParameter("@" + attr.ColName, (SqlDbType)attr.ColType, attr.ColSize);
-                        param.Value = getProperDbParameterValue( bean.Value, attr.ColType);
-                        ValueList.Add(param);
-                    }
-                }
-                //mysql未实现
-
-
-
-            }
-            sqlText.Remove(sqlText.Length - 1, 1);
-            sqlText.Append(")");
+            
 
             //清除缓存
             if (CacheFactory.IsCached(session,model)) {

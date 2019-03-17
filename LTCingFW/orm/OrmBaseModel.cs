@@ -68,16 +68,19 @@ namespace LTCingFW
             }
         }
 
-
+        /// <summary>
+        /// 模糊查询的项
+        /// </summary>
+        public List<string> FuzzyColumnNames { get; } = new List<string>();
 
         /// <summary>
         /// 自定义OrderBy
         /// </summary>
-        public String OrderBy { get; set; }
+        public string OrderBy { get; set; }
         /// <summary>
         /// 多为日期等带有大于小于或模糊查询使用
         /// </summary>
-        public String Where { get; set; }
+        public string Where { get; set; }
         /// <summary>
         /// 是否使用distinct
         /// </summary>
