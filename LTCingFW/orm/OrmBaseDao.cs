@@ -437,7 +437,7 @@ namespace LTCingFW
             if (session.Connection is MySqlConnection)
             {
                 sql = sql + " ORDER BY " + orderby;
-                sb.Append(sql).Append(" LIMIT ").Append(min_limit) .Append(",").Append(max_limit);
+                sb.Append(sql).Append(" LIMIT ").Append(min_limit-1) .Append(",").Append(model.PageItemCount);
             }
 
             return sb.ToString();
