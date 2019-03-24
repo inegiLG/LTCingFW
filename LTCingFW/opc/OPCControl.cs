@@ -682,7 +682,11 @@ namespace LTCingFW.opc
                     //命令Item
                     foreach (XmlOpcItem itm in cmd.OpcItems)
                     {
-                        command.ItemGroupList.Add(new ItemInfo(itm.Id));
+                        ItemInfo itf = new ItemInfo(itm.Id);
+                        itf.OPCItemDesc = itm.Describe;
+                        itf.OPCItemType = itm.Type;
+                        itf.OPCItemAddress = itm.Address;
+                        command.ItemGroupList.Add(itf);
                     }
                     cmds.Add(command);
 
