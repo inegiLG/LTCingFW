@@ -85,6 +85,11 @@ namespace LTCingFW
         /// 是否使用distinct
         /// </summary>
         public bool Distinct { get; set; } = false;
+
+        /// <summary>
+        /// 查询上锁，预防 脏读
+        /// </summary>
+        public bool SelectForUpdate { get; set; } = false;
         /// <summary>
         /// 是否使用SqlServer的Select语句的Top
         /// </summary>

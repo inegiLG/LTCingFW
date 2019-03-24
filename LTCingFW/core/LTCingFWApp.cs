@@ -143,8 +143,10 @@ namespace LTCingFW
         {
             try
             {
-                Assembly assembly = Assembly.GetEntryAssembly();//当前程序集
-                foreach (Type type in assembly.GetTypes())
+                Type[] entryTypes = Assembly.GetEntryAssembly().GetTypes();//入口程序集
+                Type[] fwTypes = Assembly.GetExecutingAssembly().GetTypes();//框架程序集
+                Type[] allTypes = entryTypes.Concat(fwTypes).ToArray();
+                foreach (Type type in allTypes)
                 {
 
                     IEnumerable<Attribute> attributes = type.GetCustomAttributes(typeof(BaseInstanceAttribute));

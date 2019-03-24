@@ -1,4 +1,5 @@
 ﻿using log4net;
+using LTCingFW.opc;
 using Microsoft.Win32;
 using Oracle.ManagedDataAccess.Client;
 using System;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
@@ -283,24 +285,36 @@ namespace LTCingFW.utils
                         //NULL
                         info.SetValue(model, null);
                     }
-                    else if (value is System.DateTime) {
-                        //Date
-                        info.SetValue(model, (Convert.ToDateTime(value)).ToString("yyyy-MM-dd HH:mm:ss"));
-                    }
-                    else if (value is System.Boolean)
+                    if (info.PropertyType == typeof(string))
                     {
-                        //Boolean
-                        if ((bool)value) {
-                            info.SetValue(model, "1");
+                        if (value is System.DateTime)
+                        {
+                            //Date
+                            info.SetValue(model, (Convert.ToDateTime(value)).ToString("yyyy-MM-dd HH:mm:ss"));
                         }
-                        else{
-                            info.SetValue(model, "0");
+                        else if (value is System.Boolean)
+                        {
+                            //Boolean
+                            if ((bool)value)
+                            {
+                                info.SetValue(model, "1");
+                            }
+                            else
+                            {
+                                info.SetValue(model, "0");
+                            }
+                        }
+                        else
+                        {
+                            //Decimal和String
+                            info.SetValue(model, Convert.ToString(value));
                         }
                     }
-                    else {
-                        //Decimal和String
-                        info.SetValue(model, Convert.ToString(value));
+                    if (info.PropertyType == typeof(object))
+                    {
+                        info.SetValue(model, value);
                     }
+                    
                     
 
                 }
@@ -658,9 +672,7 @@ namespace LTCingFW.utils
         {
             if ((MySqlDbType)typeInt == MySqlDbType.CHAR || (MySqlDbType)typeInt == MySqlDbType.VARCHAR
                 || (MySqlDbType)typeInt == MySqlDbType.TINYTEXT || (MySqlDbType)typeInt == MySqlDbType.TEXT
-                || (MySqlDbType)typeInt == MySqlDbType.MEDIUMTEXT || (MySqlDbType)typeInt == MySqlDbType.LONGTEXT
-                || (MySqlDbType)typeInt == MySqlDbType.TINYBLOB || (MySqlDbType)typeInt == MySqlDbType.BLOB
-                || (MySqlDbType)typeInt == MySqlDbType.MEDIUMBLOB || (MySqlDbType)typeInt == MySqlDbType.LONGBLOB)
+                || (MySqlDbType)typeInt == MySqlDbType.MEDIUMTEXT || (MySqlDbType)typeInt == MySqlDbType.LONGTEXT)
             {
                 return true;
             }
@@ -835,6 +847,75 @@ namespace LTCingFW.utils
             }
             return returnStr;
         }
+
+        public static string GetCommonTypeByPlcType(string plcType)
+        {
+
+            if (plcType == PLCTypeEnum.BOOL.ToString())
+            {
+                return OrmDataType.CommonType.BOOL.ToString();
+            }
+            else if (plcType == PLCTypeEnum.BYTE.ToString())
+            {
+                return OrmDataType.CommonType.INT.ToString();
+            }
+            else if (plcType == PLCTypeEnum.CHAR.ToString())
+            {
+                return OrmDataType.CommonType.INT.ToString();
+            }
+            else if (plcType == PLCTypeEnum.DATETIME.ToString())
+            {
+                return OrmDataType.CommonType.DATE.ToString();
+            }
+            else if (plcType == PLCTypeEnum.DINT.ToString())
+            {
+                return OrmDataType.CommonType.INT.ToString();
+            }
+            else if (plcType == PLCTypeEnum.DWORD.ToString())
+            {
+                return OrmDataType.CommonType.INT.ToString();
+            }
+            else if (plcType == PLCTypeEnum.INT.ToString())
+            {
+                return OrmDataType.CommonType.INT.ToString();
+            }
+            else if (plcType == PLCTypeEnum.REAL.ToString())
+            {
+                return OrmDataType.CommonType.DECIMAL.ToString();
+            }
+            else if (plcType == PLCTypeEnum.WORD.ToString())
+            {
+                return OrmDataType.CommonType.INT.ToString();
+            }
+           
+            else
+            {
+                throw new LTCingFWException(String.Format("无法将{0}PlcType转换为CommonType", plcType));
+            }
+            
+            
+        }
+        public static object GetCommonTypeValue(object value,string commonType)
+        {
+            if (commonType == OrmDataType.CommonType.STRING.ToString().ToUpper()) { return Convert.ToString(value); }
+            else if (commonType == OrmDataType.CommonType.INT.ToString().ToUpper()) { return  Convert.ToInt32(value); }
+            else if (commonType == OrmDataType.CommonType.DECIMAL.ToString().ToUpper()) { return  Convert.ToDecimal(value); }
+            else if (commonType == OrmDataType.CommonType.DATE.ToString().ToUpper()) { return Convert.ToDateTime(value); }
+            else if (commonType == OrmDataType.CommonType.BOOL.ToString().ToUpper()) { return Convert.ToBoolean(value); }
+            else if (commonType == OrmDataType.CommonType.BINARY.ToString().ToUpper()) {
+                if (value is byte[])
+                {
+                    return value;
+                }
+                else
+                {
+                    throw new LTCingFWException("值不是byte[]类型！");
+                }
+                
+            }
+            else { throw new LTCingFWException(commonType + "不是六种类型之一！"); }
+        }
+
 
 
     }

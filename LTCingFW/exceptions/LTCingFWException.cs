@@ -11,7 +11,7 @@ namespace LTCingFW
         /// <summary>
         /// 山信软件错误信息
         /// </summary>
-        private String _error_msg;
+        private string _error_msg;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -21,7 +21,7 @@ namespace LTCingFW
 
         public LTCingFWException(String error_msg, Exception innerException) : base(error_msg, innerException)
         {
-            this._error_msg = error_msg;
+            this._error_msg = error_msg + innerException.Message;
         }
         public LTCingFWException(String error_msg) : base(error_msg)
         {

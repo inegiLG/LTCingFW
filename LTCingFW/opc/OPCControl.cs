@@ -35,7 +35,7 @@ namespace LTCingFW.opc
         /// 已经注册进来的OPCCommand命令集合。
         /// 这标志着在OPCServer中有其对应组。
         /// </summary>
-        public List<OPCCommand> CommandList { get; } = new List<OPCCommand>();
+        public List<OPCCommand> UsingCommandList { get; } = new List<OPCCommand>();
         #endregion
 
         #region 内部方法
@@ -57,10 +57,13 @@ namespace LTCingFW.opc
         /// </summary>
         /// <param name="cmdName"></param>
         /// <returns></returns>
-        public OPCCommand GetUsingOpcCommand(string cmdName) {
+        public OPCCommand GetUsingOpcCommand(string cmdName)
+        {
 
-            foreach (OPCCommand cmd in CommandList) {
-                if (cmd.CommandName == cmdName) {
+            foreach (OPCCommand cmd in UsingCommandList)
+            {
+                if (cmd.CommandName == cmdName)
+                {
                     return cmd;
                 }
             }
@@ -175,7 +178,7 @@ namespace LTCingFW.opc
                     item.ServerHandleID = opc_item.ServerHandle;
                 }
                 command.OPCGroup = OPCGroup;
-                CommandList.Add(command);
+                UsingCommandList.Add(command);
             }
             catch (Exception e)
             {
@@ -201,9 +204,9 @@ namespace LTCingFW.opc
                     OPCGroups.Remove(command.CommandName);
                     command.OPCGroup = null;
                 }
-                if (CommandList.Contains(command))
+                if (UsingCommandList.Contains(command))
                 {
-                    CommandList.Remove(command);
+                    UsingCommandList.Remove(command);
                 }
             }
 
@@ -215,7 +218,7 @@ namespace LTCingFW.opc
         /// <param name="command">命令</param>
         public OPCCommand Excute(OPCCommand command)
         {
-            return Excute( command, CommandTypeEnum.None);
+            return Excute(command, CommandTypeEnum.None);
         }
 
 
@@ -235,12 +238,13 @@ namespace LTCingFW.opc
                     throw new Exception("连接不可用，请检查连接！");
                 }
                 //检测是否创建组
-                if (!CommandList.Contains(command))
+                if (!UsingCommandList.Contains(command))
                 {
                     AddOPCCommand(command);
                 }
                 CommandTypeEnum finalType = type;
-                if (finalType == CommandTypeEnum.None) {
+                if (finalType == CommandTypeEnum.None)
+                {
                     finalType = command.CommandType;
                 }
                 //执行
@@ -302,7 +306,8 @@ namespace LTCingFW.opc
                 command.OPCGroup.SyncRead((short)OPCAutomation.OPCDataSource.OPCDevice, ItemNums, ref ServerHandles, out Values, out Errors, out Qulities, out TimeStamps);
                 for (int i = 0; i < command.ItemGroupList.Count; i++)
                 {
-                    if (Convert.ToInt32(Errors.GetValue(i + 1)) == 0) {
+                    if (Convert.ToInt32(Errors.GetValue(i + 1)) == 0)
+                    {
                         command.ItemGroupList[i].Error = false;
                         command.ItemGroupList[i].Value = Values.GetValue(i + 1);
                     }
@@ -363,7 +368,8 @@ namespace LTCingFW.opc
                 for (int i = 0; i < ItemNums; i++)
                 {
                     int error = Convert.ToInt32(Errors.GetValue(i + 1));
-                    if (error == 0) {
+                    if (error == 0)
+                    {
                         command.ItemGroupList[i].Error = false;
                     }
                 }
@@ -575,15 +581,19 @@ namespace LTCingFW.opc
         /// </summary>
         /// <param name="commandName">命令名</param>
         /// <returns>OPCCommand</returns>
-        public static OPCCommand GetNewXmlCommand(string commandName) {
+        public static OPCCommand GetNewXmlCommand(string commandName)
+        {
 
             try
             {
-                if (xoc == null) {
+                if (xoc == null)
+                {
                     xoc = StaticUtils.DESerializer<XmlOpcCmdRoot>(File.ReadAllText(@"Commands.xml"));
                 }
-                foreach (XmlOpcCmd cmd in xoc.OpcCommands) {
-                    if (cmd.Name == commandName.Trim()) {
+                foreach (XmlOpcCmd cmd in xoc.OpcCommands)
+                {
+                    if (cmd.Name == commandName.Trim())
+                    {
                         OPCCommand command = new OPCCommand();
                         //命令名
                         command.CommandName = cmd.Name;
@@ -606,11 +616,16 @@ namespace LTCingFW.opc
                                 command.CommandType = CommandTypeEnum.DiffSense;
                                 break;
                             default:
-                                throw new Exception(commandName+"命令MODE类型错误，请选择AsyncRead、AsyncWrite、SyncRead、SyncWrite、DiffSense");
+                                throw new Exception(commandName + "命令MODE类型错误，请选择AsyncRead、AsyncWrite、SyncRead、SyncWrite、DiffSense");
                         }
                         //命令Item
-                        foreach (XmlOpcItem itm in cmd.OpcItems) {
-                            command.ItemGroupList.Add(new ItemInfo(itm.Id));
+                        foreach (XmlOpcItem itm in cmd.OpcItems)
+                        {
+                            ItemInfo iif = new ItemInfo(itm.Id);
+                            iif.OPCItemType = itm.Type;
+                            iif.OPCItemAddress = itm.Address;
+                            iif.OPCItemDesc = itm.Describe;
+                            command.ItemGroupList.Add(iif);
                         }
                         return command;
                     }
@@ -623,6 +638,63 @@ namespace LTCingFW.opc
             }
             return null;
         }
+
+
+        /// <summary>
+        /// 从XML中获取所有的Command
+        /// </summary>
+        /// <returns></returns>
+        public static List<OPCCommand> GetAllXmlCommand()
+        {
+            try
+            {
+                List<OPCCommand> cmds = new List<OPCCommand>();
+                if (xoc == null)
+                {
+                    xoc = StaticUtils.DESerializer<XmlOpcCmdRoot>(File.ReadAllText(@"Commands.xml"));
+                }
+                foreach (XmlOpcCmd cmd in xoc.OpcCommands)
+                {
+                    OPCCommand command = new OPCCommand();
+                    //命令名
+                    command.CommandName = cmd.Name;
+                    //命令类型
+                    switch (cmd.Mode.ToLower())
+                    {
+                        case "syncread":
+                            command.CommandType = CommandTypeEnum.SyncRead;
+                            break;
+                        case "syncwrite":
+                            command.CommandType = CommandTypeEnum.SyncWrite;
+                            break;
+                        case "asyncread":
+                            command.CommandType = CommandTypeEnum.AsyncRead;
+                            break;
+                        case "asyncwrite":
+                            command.CommandType = CommandTypeEnum.AsyncWrite;
+                            break;
+                        case "diffsense":
+                            command.CommandType = CommandTypeEnum.DiffSense;
+                            break;
+                        default:
+                            throw new Exception(command.CommandName + "命令MODE类型错误，请选择AsyncRead、AsyncWrite、SyncRead、SyncWrite、DiffSense");
+                    }
+                    //命令Item
+                    foreach (XmlOpcItem itm in cmd.OpcItems)
+                    {
+                        command.ItemGroupList.Add(new ItemInfo(itm.Id));
+                    }
+                    cmds.Add(command);
+
+                }
+                return cmds;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         #endregion
 
     }

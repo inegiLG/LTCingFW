@@ -223,6 +223,22 @@ namespace LTCingFW
             GEOMETRYCOLLECTION = 236
         }
 
+        public enum CommonType
+        {
+            //字符串
+            STRING = 1001,
+            //整数
+            INT = 1002,
+            //小数
+            DECIMAL = 1003,
+            //布尔
+            BOOL = 1004,
+            //二进制
+            BINARY = 1005,
+            //日期
+            DATE = 1006
+        }
+
     }
 
    

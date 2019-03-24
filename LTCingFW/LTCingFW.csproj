@@ -61,6 +61,7 @@
     <Compile Include="attributes\DBSessionAttribute.cs" />
     <Compile Include="attributes\InjectedAttribute.cs" />
     <Compile Include="attributes\ServiceAttribute.cs" />
+    <Compile Include="base\BaseThread.cs" />
     <Compile Include="beans\FwAopBean.cs" />
     <Compile Include="beans\FwInstanceBean.cs" />
     <Compile Include="beans\ThreadContext.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="opc\OPCCommand.cs" />
     <Compile Include="opc\OPCControl.cs" />
     <Compile Include="opc\OPCServerRWException.cs" />
+    <Compile Include="opc\PLCTypeEnum.cs" />
     <Compile Include="opc\StaticUtils.cs" />
     <Compile Include="opc\XmlCommandConfig.cs" />
     <Compile Include="orm\attributes\OrmColumnAttribute.cs" />
@@ -99,6 +101,13 @@
     <Compile Include="orm\OrmColumnBean.cs" />
     <Compile Include="orm\OrmDataType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="unitdata\ColumnInfoOrmModel.cs" />
+    <Compile Include="unitdata\ProjectInfoOrmModel.cs" />
+    <Compile Include="unitdata\UDDao.cs" />
+    <Compile Include="unitdata\RowInfoOrmModel.cs" />
+    <Compile Include="unitdata\TableInfoOrmModel.cs" />
+    <Compile Include="unitdata\UDConstructionService.cs" />
+    <Compile Include="unitdata\ValueInfoOrmModel.cs" />
     <Compile Include="utils\FwUtilFunc.cs" />
     <Compile Include="utils\XmlManager.cs" />
     <Compile Include="validation\ValidateAttribute.cs" />
@@ -143,5 +152,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

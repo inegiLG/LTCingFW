@@ -18,6 +18,12 @@ namespace LTCingFW.opc
         /// </summary>
         public String OPCItemID { get; set; }
 
+        public string OPCItemDesc { get; set; }
+
+        public string OPCItemType { get; set; }
+
+        public string OPCItemAddress { get; set; }
+
         /// <summary>
         /// 客户操作使用ID
         /// </summary>

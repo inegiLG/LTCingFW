@@ -105,7 +105,10 @@ namespace LTCingFW
                 }
 
             }
-            catch (Exception ex) { throw ex; }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         /// <summary>
@@ -133,6 +136,10 @@ namespace LTCingFW
                 #region 代理方法
 
                 Type type = Assembly.GetEntryAssembly().GetType(type_full_name);
+                if (type == null)
+                {
+                    type = Assembly.GetExecutingAssembly().GetType(type_full_name);
+                }
                 MethodInfo[] mtds = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
                 foreach (MethodInfo mi in mtds)
                 {

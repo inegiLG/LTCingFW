@@ -9,6 +9,10 @@ namespace LTCingFW
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class InjectedAttribute : BaseInstanceAttribute
     {
-
+        public InjectedAttribute(string name)
+        {
+            Name = name;
+        }
+        public InjectedAttribute() { }
     }
 }

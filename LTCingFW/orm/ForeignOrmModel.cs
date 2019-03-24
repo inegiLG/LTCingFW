@@ -41,25 +41,26 @@ namespace LTCingFW
                             FwUtilFunc.SetObjectPropertyValue(inst, foreignColumnNames[i], value);
                         }
                         //3.查询
-                        session = DBSession.OpenSession(DbAlias,false);
-                        DataTable resultDT = Select(session, inst as OrmBaseModel);
+                        session = LTCingFW.LTCingFWSet.GetThreadContext().DBSession;
+                        MethodInfo Select_Method = typeof(OrmBaseDao).GetMethod("SelectT", new Type[] { typeof(DBSession), typeof(OrmBaseModel) });
+                        MethodInfo Cur_Select_Method = Select_Method.MakeGenericMethod(aimType);
+                        object Final_Result = Cur_Select_Method.Invoke(this, new object[] { session, inst as OrmBaseModel });
+                        //DataTable resultDT = Select(session, inst as OrmBaseModel);
                         //4.通过反射调用LoadOrmModelListFromDataTable<T>，返回List<T>
-                        MethodInfo Load_Method = typeof(FwUtilFunc).GetMethod("LoadOrmModelListFromDataTable", new Type[] { typeof(DataTable) });
-                        MethodInfo Cur_Load_Method = Load_Method.MakeGenericMethod(aimType);
-                        object Final_Result = Cur_Load_Method.Invoke(null, new object[] { resultDT });
+                        //MethodInfo Load_Method = typeof(FwUtilFunc).GetMethod("LoadOrmModelListFromDataTable", new Type[] { typeof(DataTable) });
+                        //MethodInfo Cur_Load_Method = Load_Method.MakeGenericMethod(aimType);
+                        //object Final_Result = Cur_Load_Method.Invoke(null, new object[] { resultDT });
                         //5.设置List进如ForeignOrmModel
                         result = Final_Result as List<T>;
                     }
                     return result;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    throw;
+                    throw e;
                 }
                 finally {
-                    if (session != null) {
-                        session.Close();
-                    }
+                   
                 }
             }
             set {
