@@ -13,7 +13,7 @@ namespace LTCingFW
         //循环时间,默认1000ms
         public int LoopRate { set; get; } = 1000;
 
-        public abstract void run();
+        public abstract void run(object param);
 
     }
 }
