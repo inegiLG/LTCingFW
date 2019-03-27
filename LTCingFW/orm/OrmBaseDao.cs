@@ -27,6 +27,9 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetTableName(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel) {
+                model = (OrmBaseModel)this;
+            }
             OrmTableAttribute[] attrs = model.GetType().GetCustomAttributes(typeof(OrmTableAttribute), true) as OrmTableAttribute[];
             foreach (OrmTableAttribute attr in attrs)
             {
@@ -47,6 +50,10 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetAllColumnNameStr(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             StringBuilder sb = new StringBuilder();
             foreach (OrmColumnBean bean in model.OrmList)
             {
@@ -66,6 +73,10 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetInsertColumnValuesStr(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             StringBuilder sb = new StringBuilder();
             foreach (OrmColumnBean bean in model.OrmList)
             {
@@ -99,6 +110,10 @@ namespace LTCingFW
         /// <param name="sqlText"></param>
         private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             foreach (OrmColumnBean bean in model.OrmList)
             {
                 DbParameter param = null;
@@ -141,6 +156,10 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetUpdateSetColumnStr(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             StringBuilder sb = new StringBuilder();
             foreach (OrmColumnBean bean in model.OrmList)
             {
@@ -181,6 +200,10 @@ namespace LTCingFW
         /// <returns></returns>
         private void GetUpdateSetColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             foreach (OrmColumnBean bean in model.OrmList)
             {
                 DbParameter param = null;
@@ -363,6 +386,10 @@ namespace LTCingFW
         /// <param name="fuzzy">是否为模糊查询</param>
         private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             bool hasPrimaryKey = false;
             //遍历属性值
             foreach (OrmColumnBean bean in model.OrmList)
@@ -430,6 +457,10 @@ namespace LTCingFW
 
         public int GetItemCount(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             StringBuilder sql = new StringBuilder();
             sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
             List<DbParameter> ValueList = new List<DbParameter>();
@@ -452,6 +483,10 @@ namespace LTCingFW
         /// <returns></returns>
         private String addPaginationSql(String sql, DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             int max_limit = model.UpLimitNumber;
             int min_limit = model.LowLimitNumber;
             String allColumnString = GetAllColumnNameStr(session, model);
@@ -511,6 +546,10 @@ namespace LTCingFW
         /// <returns>DataTable</returns>
         public DataTable SelectPage(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DbConnection conn = session.Connection;
             List<DbParameter> ValueList = new List<DbParameter>();
             StringBuilder sqlText = new StringBuilder();
@@ -555,7 +594,10 @@ namespace LTCingFW
         /// <returns>List<T></returns>
         public List<T> SelectPage<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
         {
-
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DataTable res = SelectPage(session, model);
             List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
             foreach (T ormModel in resT)
@@ -572,6 +614,10 @@ namespace LTCingFW
         /// <returns></returns>
         public DataTable Select(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DbConnection conn = session.Connection;
             List<DbParameter> ValueList = new List<DbParameter>();
             StringBuilder sqlText = new StringBuilder();
@@ -622,7 +668,10 @@ namespace LTCingFW
         /// <returns></returns>
         public List<T> SelectT<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
         {
-
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DataTable res = Select(session, model);
             List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
             foreach (T ormModel in resT)
@@ -639,6 +688,10 @@ namespace LTCingFW
         /// <returns></returns>
         public DataTable SelectByPrimaryKey(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DbConnection conn = session.Connection;
             List<DbParameter> ValueList = new List<DbParameter>();
             StringBuilder sqlText = new StringBuilder();
@@ -668,6 +721,10 @@ namespace LTCingFW
         /// <returns></returns>
         public List<T> SelectByPrimaryKey<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DataTable res = SelectByPrimaryKey(session, model);
             List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
             foreach (T resModel in resT)
@@ -682,9 +739,12 @@ namespace LTCingFW
         /// </summary>
         /// <param name="session">DBSession</param>
         /// <param name="model">含有其他OrmModel查询的OrmModel</param>
-        public void QueryForForeignOrmModel(DBSession session, OrmBaseModel resModel)
+        private void QueryForForeignOrmModel(DBSession session, OrmBaseModel resModel)
         {
-
+            if (resModel == null && resModel is OrmBaseModel)
+            {
+                resModel = (OrmBaseModel)this;
+            }
             PropertyInfo[] infos = resModel.GetType().GetProperties();
             foreach (PropertyInfo info in infos)
             {
@@ -761,7 +821,7 @@ namespace LTCingFW
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public DataTable Select(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
+        private DataTable Select(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
         {
             logger.Debug(sql);
             DbDataAdapter adapter = DbConnectionFactory.GetDataAdapter(conn, sql);
@@ -803,6 +863,10 @@ namespace LTCingFW
         /// <returns></returns>
         public int Insert(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DbConnection conn = session.Connection;
             String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();
@@ -844,6 +908,10 @@ namespace LTCingFW
         /// <returns></returns>
         public int Delete(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DbConnection conn = session.Connection;
             String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();
@@ -879,6 +947,10 @@ namespace LTCingFW
         /// <returns></returns>
         public int Update(DBSession session, OrmBaseModel model)
         {
+            if (model == null && model is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
             DbConnection conn = session.Connection;
             String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();

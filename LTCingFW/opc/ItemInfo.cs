@@ -10,7 +10,7 @@ namespace LTCingFW.opc
     /// <summary>
     /// 条目信息
     /// </summary>
-    public class ItemInfo
+    public class ItemInfo:ICloneable
     {
 
         /// <summary>
@@ -82,6 +82,22 @@ namespace LTCingFW.opc
             this.Quality = 0;
             this.TimeStamp = new DateTime();
             this.Value = null;
+        }
+
+        public object Clone()
+        {
+            ItemInfo info = new ItemInfo(this.OPCItemID);
+            info.OPCItem = this.OPCItem;
+            info.OPCItemAddress = this.OPCItemAddress;
+            info.OPCItemDesc = this.OPCItemDesc;
+            info.OPCItemType = this.OPCItemType;
+            info.Quality = this.Quality;
+            info.ServerHandleID = this.ServerHandleID;
+            info.TimeStamp = this.TimeStamp;
+            info.Value = this.Value;
+            info.ClientHandleID = this.ClientHandleID;
+            info.Error = this.Error;
+            return info;
         }
     }
 }

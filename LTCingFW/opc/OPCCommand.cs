@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LTCingFW.opc
 {
-    public class OPCCommand : OPCAckonwledgeInterface
+    public class OPCCommand : OPCAckonwledgeInterface,ICloneable
     {
         /// <summary>
         /// 命令名
@@ -251,5 +251,20 @@ namespace LTCingFW.opc
 
         }
 
+        public object Clone()
+        {
+            OPCCommand cmd = new OPCCommand();
+            cmd.CancelID = this.CancelID;
+            cmd.CommandName = this.CommandName;
+            cmd.CommandState = this.CommandState;
+            cmd.CommandType = this.CommandType;
+            cmd.OPCGroup = this.OPCGroup;
+            cmd.SensorUpdateRate = this.SensorUpdateRate;
+            foreach (ItemInfo item in this.ItemGroupList)
+            {
+                cmd.ItemGroupList.Add(item.Clone() as ItemInfo);
+            }
+            return cmd;
+        }
     }
 }

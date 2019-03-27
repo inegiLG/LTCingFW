@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace LTCingFW
 {
-    public class OrmBaseModel
+    public class OrmBaseModel : OrmBaseDao
     {
 
         //分页使用
@@ -164,9 +164,6 @@ namespace LTCingFW
                 return ormList;
             }
         }
-
-
-
 
 
     }
