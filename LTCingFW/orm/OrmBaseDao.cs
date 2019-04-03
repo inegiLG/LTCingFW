@@ -263,7 +263,7 @@ namespace LTCingFW
             {
                 return System.DBNull.Value;
             }
-            if (colType <= 100)
+            if (colType > 0 && colType <= 100)
             {
                 //SqlServer Type
                 if (FwUtilFunc.sqlserverTypeIsString(colType))
@@ -344,7 +344,7 @@ namespace LTCingFW
                         }
                         else
                         {
-                            throw new LTCingFWException("值不是布尔类型！");
+                            res = Convert.ToBoolean(value);
                         }
                         break;
                     case (int)OrmDataType.CommonType.DATE:
@@ -354,6 +354,10 @@ namespace LTCingFW
                         if (value is byte[])
                         {
                             res = value;
+                        }
+                        else
+                        {
+                            throw new LTCingFWException("BINARY 类型必须是byte[]类型！");
                         }
                         break;
                     default:
@@ -821,7 +825,7 @@ namespace LTCingFW
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        private DataTable Select(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
+        public DataTable Select(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
         {
             logger.Debug(sql);
             DbDataAdapter adapter = DbConnectionFactory.GetDataAdapter(conn, sql);

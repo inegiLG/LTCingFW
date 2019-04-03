@@ -10,7 +10,7 @@ namespace LTCingFW
     public class OrmColumnAttribute : Attribute
     {
         public string ColName { get; set; }
-        public int ColType { get; set; }
+        public int ColType { get; set; } = 0;
         public int ColSize { get; set; }
         public string DbAlias { get; set; }
         /// <summary>

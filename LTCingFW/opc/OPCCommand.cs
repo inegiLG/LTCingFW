@@ -251,6 +251,25 @@ namespace LTCingFW.opc
 
         }
 
+        /// <summary>
+        /// 根据ID查找Item
+        /// </summary>
+        /// <param name="ItemID"></param>
+        /// <returns></returns>
+        public ItemInfo FindItemByID(string ItemID)
+        {
+            ItemInfo it = null;
+            foreach (ItemInfo item in ItemGroupList)
+            {
+                if (item.OPCItemID == ItemID)
+                {
+                    it = item;
+                    break;
+                }
+            }
+            return it;
+        }
+
         public object Clone()
         {
             OPCCommand cmd = new OPCCommand();
