@@ -27,7 +27,7 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetTableName(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel) {
+            if (model == null && this is OrmBaseModel) {
                 model = (OrmBaseModel)this;
             }
             OrmTableAttribute[] attrs = model.GetType().GetCustomAttributes(typeof(OrmTableAttribute), true) as OrmTableAttribute[];
@@ -50,7 +50,7 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetAllColumnNameStr(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -73,7 +73,7 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetInsertColumnValuesStr(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -110,7 +110,7 @@ namespace LTCingFW
         /// <param name="sqlText"></param>
         private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -156,7 +156,7 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetUpdateSetColumnStr(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -200,7 +200,7 @@ namespace LTCingFW
         /// <returns></returns>
         private void GetUpdateSetColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -390,7 +390,7 @@ namespace LTCingFW
         /// <param name="fuzzy">是否为模糊查询</param>
         private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -461,7 +461,7 @@ namespace LTCingFW
 
         public int GetItemCount(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -487,7 +487,7 @@ namespace LTCingFW
         /// <returns></returns>
         private String addPaginationSql(String sql, DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -550,7 +550,7 @@ namespace LTCingFW
         /// <returns>DataTable</returns>
         public DataTable SelectPage(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -598,7 +598,7 @@ namespace LTCingFW
         /// <returns>List<T></returns>
         public List<T> SelectPage<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -618,7 +618,7 @@ namespace LTCingFW
         /// <returns></returns>
         public DataTable Select(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -672,7 +672,7 @@ namespace LTCingFW
         /// <returns></returns>
         public List<T> SelectT<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -692,7 +692,7 @@ namespace LTCingFW
         /// <returns></returns>
         public DataTable SelectByPrimaryKey(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -725,7 +725,7 @@ namespace LTCingFW
         /// <returns></returns>
         public List<T> SelectByPrimaryKey<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -867,7 +867,7 @@ namespace LTCingFW
         /// <returns></returns>
         public int Insert(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -912,7 +912,7 @@ namespace LTCingFW
         /// <returns></returns>
         public int Delete(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
@@ -951,7 +951,7 @@ namespace LTCingFW
         /// <returns></returns>
         public int Update(DBSession session, OrmBaseModel model)
         {
-            if (model == null && model is OrmBaseModel)
+            if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
