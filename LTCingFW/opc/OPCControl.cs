@@ -143,39 +143,41 @@ namespace LTCingFW.opc
         {
             OPCGroups OPCGroups = _server.OPCGroups;
             OPCGroup OPCGroup = null;
+            int i = 0;
+            
+            //检查
+            if (OPCServer.ServerState != (int)OPCServerState.OPCRunning)
+            {
+                throw new OPCServerRWException("连接不可用，请检查连接！");
+            }
+            if (command.ItemGroupList.Count == 0)
+            {
+                throw new OPCServerRWException("未添加Item信息！");
+            }
+            if (command.CommandName != null && command.CommandName.Trim() != "")
+            {
+                OPCCommand c = GetUsingOpcCommand(command.CommandName);
+                if (c != null)
+                {
+                    throw new OPCServerRWException("该命令名的命令已经存在，请使用其他命令名或不使用命令名！");
+                    //RemoveOPCCommand(c);
+                }
+            }
+            else
+            {
+                command.CommandName = StaticUtils.GetRandomGroupName();
+            }
+            //添加
             try
             {
-                //检查
-                if (OPCServer.ServerState != (int)OPCServerState.OPCRunning)
-                {
-                    throw new OPCServerRWException("连接不可用，请检查连接！");
-                }
-                if (command.ItemGroupList.Count == 0)
-                {
-                    throw new OPCServerRWException("未添加Item信息！");
-                }
-                if (command.CommandName != null && command.CommandName.Trim() != "")
-                {
-                    OPCCommand c = GetUsingOpcCommand(command.CommandName);
-                    if (c != null)
-                    {
-                        throw new OPCServerRWException("该命令名的命令已经存在，请使用其他命令名或不使用命令名！");
-                        //RemoveOPCCommand(c);
-                    }
-                }
-                else
-                {
-                    command.CommandName = StaticUtils.GetRandomGroupName();
-                }
-                //添加
                 OPCGroup = OPCGroups.Add(command.CommandName);
-                foreach (ItemInfo item in command.ItemGroupList)
+                for (; i < command.ItemGroupList.Count; i++)
                 {
                     int clientID = StaticUtils.ClientHandleID++;
-                    OPCItem opc_item = OPCGroup.OPCItems.AddItem(item.OPCItemID, clientID);
-                    item.OPCItem = opc_item;
-                    item.ClientHandleID = clientID;
-                    item.ServerHandleID = opc_item.ServerHandle;
+                    OPCItem opc_item = OPCGroup.OPCItems.AddItem(command.ItemGroupList[i].OPCItemID, clientID);
+                    command.ItemGroupList[i].OPCItem = opc_item;
+                    command.ItemGroupList[i].ClientHandleID = clientID;
+                    command.ItemGroupList[i].ServerHandleID = opc_item.ServerHandle;
                 }
                 command.OPCGroup = OPCGroup;
                 UsingCommandList.Add(command);
@@ -186,7 +188,7 @@ namespace LTCingFW.opc
                 {
                     OPCGroups.Remove(command.CommandName);
                 }
-                throw new OPCServerRWException("添加OPCCommand出错！", e);
+                throw new OPCServerRWException("添加OPCItem出错，出错变量名["+ command.ItemGroupList[i].OPCItemID+"]", e);
             }
         }
 
