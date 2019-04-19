@@ -291,6 +291,7 @@ namespace LTCingFW.opc
         {
             try
             {
+                DateTime now = DateTime.Now;
                 List<int> ServerHandleList = new List<int>();
                 foreach (ItemInfo info in command.ItemGroupList)
                 {
@@ -305,25 +306,24 @@ namespace LTCingFW.opc
                 object TimeStamps;
                 //读取
                 command.ClearValues();
-                command.OPCGroup.SyncRead((short)OPCAutomation.OPCDataSource.OPCDevice, ItemNums, ref ServerHandles, out Values, out Errors, out Qulities, out TimeStamps);
+                command.OPCGroup.SyncRead((short)OPCAutomation.OPCDataSource.OPCCache, ItemNums, ref ServerHandles, out Values, out Errors, out Qulities, out TimeStamps);
                 for (int i = 0; i < command.ItemGroupList.Count; i++)
                 {
                     if (Convert.ToInt32(Errors.GetValue(i + 1)) == 0)
                     {
                         command.ItemGroupList[i].Error = false;
-                        command.ItemGroupList[i].Value = Values.GetValue(i + 1);
                     }
 
                     if (Qulities is Array)
                     {
                         object q = (Qulities as Array).GetValue(i + 1);
-                        command.ItemGroupList[i].Quality = Convert.ToInt32(q == null ? 0 : q);
-                    }
-
-                    if (TimeStamps is Array)
-                    {
-                        object v = (TimeStamps as Array).GetValue(i + 1);
-                        command.ItemGroupList[i].TimeStamp = Convert.ToDateTime(v);
+                        int qulity = Convert.ToInt32(q == null ? 0 : q);
+                        command.ItemGroupList[i].Quality = qulity;
+                        if (qulity > 0)
+                        {
+                            command.ItemGroupList[i].Value = Values.GetValue(i + 1);
+                            command.ItemGroupList[i].TimeStamp = now;
+                        }
                     }
 
                 }
@@ -341,7 +341,7 @@ namespace LTCingFW.opc
         /// <param name="command">执行命令</param>
         private static void ExecuteSyncWrite(OPCCommand command)
         {
-
+            DateTime now = DateTime.Now;
             try
             {
                 List<int> ServerHandleList = new List<int>();
@@ -353,6 +353,7 @@ namespace LTCingFW.opc
                     {
                         ServerHandleList.Add(info.ServerHandleID);
                         ValueList.Add(info.Value);
+                        info.TimeStamp = now;
                     }
                 }
                 int ItemNums = ServerHandleList.Count;
@@ -394,6 +395,7 @@ namespace LTCingFW.opc
             {
                 command.OPCGroup.IsActive = true;
                 command.OPCGroup.IsSubscribed = true;
+                command.OPCGroup.AsyncReadComplete -= command.OpcGroupAsyncReadComplete;
                 command.OPCGroup.AsyncReadComplete += command.OpcGroupAsyncReadComplete;
 
                 List<int> ServerHandleList = new List<int>();
@@ -407,7 +409,7 @@ namespace LTCingFW.opc
                 Array ServerHandles = ServerHandleList.ToArray();
                 int cancelID;
                 Array Errors;
-                int TransActionID = StaticUtils.TransActionID;
+                int TransActionID = command.TransactionID == 0 ?StaticUtils.TransActionID: command.TransactionID;
                 //异步读
                 command.ClearValues();
                 command.OPCGroup.AsyncRead(ItemNums, ServerHandles, out Errors, TransActionID, out cancelID);
@@ -428,12 +430,13 @@ namespace LTCingFW.opc
         /// <param name="command"></param>
         private void ExecuteAsyncWrite(OPCCommand command)
         {
-
+            DateTime now = DateTime.Now;
             try
             {
                 //订阅事件
                 command.OPCGroup.IsActive = true;
                 command.OPCGroup.IsSubscribed = true;
+                command.OPCGroup.AsyncWriteComplete -= command.OpcGroupAsyncWriteComplete;
                 command.OPCGroup.AsyncWriteComplete += command.OpcGroupAsyncWriteComplete;
 
                 List<int> ServerHandleList = new List<int>();
@@ -445,6 +448,7 @@ namespace LTCingFW.opc
                     {
                         ServerHandleList.Add(info.ServerHandleID);
                         ValueList.Add(info.Value);
+                        info.TimeStamp = now;
                     }
                 }
                 int ItemNums = ServerHandleList.Count;
@@ -457,7 +461,7 @@ namespace LTCingFW.opc
                 Array ServerHandles = ServerHandleList.ToArray();
                 Array Values = ValueList.ToArray();
                 Array Errors;
-                int TransActionID = StaticUtils.TransActionID;
+                int TransActionID = command.TransactionID == 0 ? StaticUtils.TransActionID : command.TransactionID;
                 int cancelID;
                 //异步写
                 command.OPCGroup.AsyncWrite(ItemNums, ref ServerHandles, ref Values, out Errors, TransActionID, out cancelID);
@@ -559,7 +563,7 @@ namespace LTCingFW.opc
         {
             if (op_server_control == null)
             {
-                throw new OPCServerRWException("未创建OPC连接，请使用其他构造方法");
+                op_server_control = new OPCControl();
             }
             return op_server_control;
         }

@@ -70,6 +70,10 @@ namespace LTCingFW.utils
                 File.Delete(path);
             }
         }
+
+
+
+
         /// <summary>
         /// 通过Connection获取DB类型
         /// </summary>
@@ -265,63 +269,109 @@ namespace LTCingFW.utils
         /// <returns></returns>
         public  static List<MT> LoadOrmModelListFromDataTable<MT>(DataTable table) {
             List<MT> modelList = new List<MT>();
-            
             PropertyInfo[] infos = typeof(MT).GetProperties();
 
-            foreach (DataRow row in table.Rows) {
-
-                MT model = (MT)typeof(MT).Assembly.CreateInstance(typeof(MT).FullName) ;
-
-                foreach (PropertyInfo info in infos)
+            try
+            {
+                foreach (DataRow row in table.Rows)
                 {
-                    object[] attrs = info.GetCustomAttributes(typeof(OrmColumnAttribute), true);
-                    if (attrs.Length == 0)
+
+                    MT model = (MT)typeof(MT).Assembly.CreateInstance(typeof(MT).FullName);
+
+                    foreach (PropertyInfo info in infos)
                     {
-                        continue;
-                    }
-                    object value = row[info.Name];
-                    if (value is System.DBNull)
-                    {
-                        //NULL
-                        info.SetValue(model, null);
-                    }
-                    if (info.PropertyType == typeof(string))
-                    {
-                        if (value is System.DateTime)
+                        object[] attrs = info.GetCustomAttributes(typeof(OrmColumnAttribute), true);
+                        if (attrs.Length == 0)
                         {
-                            //Date
-                            info.SetValue(model, (Convert.ToDateTime(value)).ToString("yyyy-MM-dd HH:mm:ss"));
+                            continue;
                         }
-                        else if (value is System.Boolean)
+                        object value = row[info.Name];
+                        if (value is System.DBNull)
                         {
-                            //Boolean
-                            if ((bool)value)
+                            info.SetValue(model, null); //NULL
+                        }
+                        else if (info.PropertyType == typeof(string))
+                        {
+                            if (value is System.DateTime)
                             {
-                                info.SetValue(model, "1");
+                                //Date
+                                info.SetValue(model, (Convert.ToDateTime(value)).ToString("yyyy-MM-dd HH:mm:ss"));
+                            }
+                            else if (value is System.Boolean)
+                            {
+                                //Boolean
+                                if ((bool)value)
+                                {
+                                    info.SetValue(model, "1");
+                                }
+                                else
+                                {
+                                    info.SetValue(model, "0");
+                                }
                             }
                             else
                             {
-                                info.SetValue(model, "0");
+                                //Decimal和String
+                                info.SetValue(model, Convert.ToString(value));
                             }
+                        }
+                        else if (info.PropertyType == typeof(int))
+                        {
+                            info.SetValue(model, Convert.ToInt32(value));
+                        }
+                        else if (info.PropertyType == typeof(float))
+                        {
+                            info.SetValue(model, Convert.ToSingle(value));
+                        }
+                        else if (info.PropertyType == typeof(double))
+                        {
+                            info.SetValue(model, Convert.ToDouble(value));
+                        }
+                        else if (info.PropertyType == typeof(decimal))
+                        {
+                            info.SetValue(model, Convert.ToDecimal(value));
+                        }
+                        else if (info.PropertyType == typeof(short))
+                        {
+                            info.SetValue(model, Convert.ToInt16(value));
+                        }
+                        else if (info.PropertyType == typeof(long))
+                        {
+                            info.SetValue(model, Convert.ToInt64(value));
+                        }
+                        else if (info.PropertyType == typeof(char))
+                        {
+                            info.SetValue(model, Convert.ToChar(value));
+                        }
+                        else if (info.PropertyType == typeof(bool))
+                        {
+                            info.SetValue(model, Convert.ToBoolean(value));
+                        }
+                        else if (info.PropertyType == typeof(DateTime))
+                        {
+                            info.SetValue(model, Convert.ToDateTime(value));
+                        }
+                        else if (info.PropertyType == typeof(Byte))
+                        {
+                            info.SetValue(model, Convert.ToByte(value));
+                        }
+                        else if (info.PropertyType == typeof(SByte))
+                        {
+                            info.SetValue(model, Convert.ToSByte(value));
                         }
                         else
                         {
-                            //Decimal和String
-                            info.SetValue(model, Convert.ToString(value));
+                            info.SetValue(model, value);
                         }
                     }
-                    if (info.PropertyType == typeof(object))
-                    {
-                        info.SetValue(model, value);
-                    }
-                    
-                    
-
+                    modelList.Add(model);
                 }
-
-                modelList.Add(model);
-
             }
+            catch (Exception ex )
+            {
+                throw new LTCingFWException("DataTable->OrmModel出错："+ex.Message+ex.StackTrace);
+            }
+            
 
             return modelList;
         }
@@ -527,7 +577,11 @@ namespace LTCingFW.utils
         /// <param name="formName">Form名</param>
         /// <param name="ret"></param>
         public static void RemoveValidLabel(string formName, ValidResult ret) {
-            RemoveValidLabel((Form)FWAppContainer.getProperty(formName), ret);
+            Form f = (Form)FWAppContainer.getProperty(formName);
+            if (f != null)
+            {
+                RemoveValidLabel(f, ret);
+            }
         }
         /// <summary>
         /// 移除某个ValidLabel

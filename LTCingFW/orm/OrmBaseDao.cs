@@ -27,18 +27,27 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetTableName(DBSession session, OrmBaseModel model)
         {
-            if (model == null && this is OrmBaseModel) {
-                model = (OrmBaseModel)this;
-            }
-            OrmTableAttribute[] attrs = model.GetType().GetCustomAttributes(typeof(OrmTableAttribute), true) as OrmTableAttribute[];
-            foreach (OrmTableAttribute attr in attrs)
+            try
             {
-                if (attr.DbAlias != null && attr.DbAlias == session.DbAlias)
+                if (model == null && this is OrmBaseModel)
                 {
-                    return attr.TableName;
+                    model = (OrmBaseModel)this;
                 }
+                OrmTableAttribute[] attrs = model.GetType().GetCustomAttributes(typeof(OrmTableAttribute), true) as OrmTableAttribute[];
+                foreach (OrmTableAttribute attr in attrs)
+                {
+                    if (attr.DbAlias != null && attr.DbAlias == session.DbAlias)
+                    {
+                        return attr.TableName;
+                    }
+                }
+                return attrs[0].TableName;
             }
-            return attrs[0].TableName;
+            catch (Exception e)
+            {
+                throw new LTCingFWException("获取表名错误！", e);
+            }
+
         }
 
 
@@ -50,57 +59,29 @@ namespace LTCingFW
         /// <returns></returns>
         private String GetAllColumnNameStr(DBSession session, OrmBaseModel model)
         {
-            if (model == null && this is OrmBaseModel)
+            try
             {
-                model = (OrmBaseModel)this;
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                StringBuilder sb = new StringBuilder();
+                foreach (OrmColumnBean bean in model.OrmList)
+                {
+                    OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                    sb.Append(attr.ColName).Append(',');
+                }
+                sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
+                return sb.ToString();
             }
-            StringBuilder sb = new StringBuilder();
-            foreach (OrmColumnBean bean in model.OrmList)
+            catch (Exception e)
             {
-                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                sb.Append(attr.ColName).Append(',');
+                throw new LTCingFWException("获取所有列名错误！", e);
             }
-            sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
-            return sb.ToString();
+
         }
 
 
-        /// <summary>
-        /// 获取插入时的所有列名的SQL字符串
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private String GetInsertColumnValuesStr(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            StringBuilder sb = new StringBuilder();
-            foreach (OrmColumnBean bean in model.OrmList)
-            {
-                if (bean.Value == null)
-                {
-                    continue;
-                }
-                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                if (session.Connection is OracleConnection)
-                {
-                    sb.Append(':').Append(attr.ColName).Append(',');
-                }
-                if (session.Connection is SqlConnection)
-                {
-                    sb.Append('@').Append(attr.ColName).Append(',');
-                }
-                if (session.Connection is MySqlConnection)
-                {
-                    sb.Append('@').Append(attr.ColName).Append(',');
-                }
-            }
-            sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
-            return sb.ToString();
-        }
         /// <summary>
         /// 获取插入的值SQL和ValueList
         /// </summary>
@@ -110,110 +91,17 @@ namespace LTCingFW
         /// <param name="sqlText"></param>
         private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText)
         {
-            if (model == null && this is OrmBaseModel)
+            try
             {
-                model = (OrmBaseModel)this;
-            }
-            foreach (OrmColumnBean bean in model.OrmList)
-            {
-                DbParameter param = null;
-                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                string mark = "@";
-                if (session.Connection is OracleConnection)
+                if (model == null && this is OrmBaseModel)
                 {
-                    mark = ":";
-                    param = new OracleParameter();
+                    model = (OrmBaseModel)this;
                 }
-                else if (session.Connection is SqlConnection)
+                sqlText.Append("(");
+                foreach (OrmColumnBean bean in model.OrmList)
                 {
-                    param = new SqlParameter();
-                }
-                else if (session.Connection is MySqlConnection)
-                {
-                    param = new MySqlParameter();
-                }
-                else
-                {
-                    throw new LTCingFWException("不支持该数据库！");
-                }
-                if (attr.ColSize == 0)
-                {
-                    param.Size = attr.ColSize;
-                }
-                param.ParameterName = mark + attr.ColName;
-                param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
-                ValueList.Add(param);
-                sqlText.Append(mark).Append(attr.ColName).Append(",");
-            }
-            sqlText.Remove(sqlText.Length - 1, 1);
-            sqlText.Append(")");
-        }
-        /// <summary>
-        /// 获取更新时的SET语句的SQL字符串
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private String GetUpdateSetColumnStr(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            StringBuilder sb = new StringBuilder();
-            foreach (OrmColumnBean bean in model.OrmList)
-            {
-                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                if (!attr.PrimaryKey)
-                {
-                    if (bean.Value == null)
-                    {
-                        continue;
-                    }
-                    if (session.Connection is OracleConnection)
-                    {
-                        sb.Append(" ").Append(attr.ColName).Append('=').Append(':').Append(attr.ColName).Append(",");
-                    }
-                    if (session.Connection is SqlConnection)
-                    {
-                        sb.Append(" ").Append(attr.ColName).Append('=').Append('@').Append(attr.ColName).Append(",");
-                    }
-                    if (session.Connection is MySqlConnection)
-                    {
-                        sb.Append(" ").Append(attr.ColName).Append('=').Append('@').Append(attr.ColName).Append(",");
-                    }
-                }
-            }
-            if (sb.Length == 0)
-            {
-                throw new LTCingFWException("非主键列无更新值！");
-            }
-            sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// 获取更新时的SET值列表
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private void GetUpdateSetColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            foreach (OrmColumnBean bean in model.OrmList)
-            {
-                DbParameter param = null;
-                OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                if (!attr.PrimaryKey)
-                {
-                    if (bean.Value == null)
-                    {
-                        continue;
-                    }
+                    DbParameter param = null;
+                    OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                     string mark = "@";
                     if (session.Connection is OracleConnection)
                     {
@@ -228,6 +116,10 @@ namespace LTCingFW
                     {
                         param = new MySqlParameter();
                     }
+                    else if (session.DbFactory != null)
+                    {
+                        param = session.DbFactory.CreateParameter();
+                    }
                     else
                     {
                         throw new LTCingFWException("不支持该数据库！");
@@ -239,9 +131,127 @@ namespace LTCingFW
                     param.ParameterName = mark + attr.ColName;
                     param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
                     ValueList.Add(param);
+                    sqlText.Append(mark).Append(attr.ColName).Append(",");
                 }
-
+                sqlText.Remove(sqlText.Length - 1, 1);
+                sqlText.Append(")");
             }
+            catch (Exception e)
+            {
+                throw new LTCingFWException("插入式中获取所有列名以及值错误！", e);
+            }
+
+        }
+        /// <summary>
+        /// 获取更新时的SET语句的SQL字符串
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private String GetUpdateSetColumnStr(DBSession session, OrmBaseModel model)
+        {
+            try
+            {
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                StringBuilder sb = new StringBuilder();
+                foreach (OrmColumnBean bean in model.OrmList)
+                {
+                    OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                    if (!attr.PrimaryKey)
+                    {
+                        if (bean.Value == null)
+                        {
+                            continue;
+                        }
+                        if (session.Connection is OracleConnection)
+                        {
+                            sb.Append(" ").Append(attr.ColName).Append('=').Append(':').Append(attr.ColName).Append(",");
+                        }
+                        else
+                        {
+                            sb.Append(" ").Append(attr.ColName).Append('=').Append('@').Append(attr.ColName).Append(",");
+                        }
+
+                    }
+                }
+                if (sb.Length == 0)
+                {
+                    throw new LTCingFWException("非主键列无更新值！");
+                }
+                sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new LTCingFWException("更新式中获取SET所有列名错误！", e);
+            }
+
+        }
+
+        /// <summary>
+        /// 获取更新时的SET值列表
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private void GetUpdateSetColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList)
+        {
+            try
+            {
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                foreach (OrmColumnBean bean in model.OrmList)
+                {
+                    DbParameter param = null;
+                    OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                    if (!attr.PrimaryKey)
+                    {
+                        if (bean.Value == null)
+                        {
+                            continue;
+                        }
+                        string mark = "@";
+                        if (session.Connection is OracleConnection)
+                        {
+                            mark = ":";
+                            param = new OracleParameter();
+                        }
+                        else if (session.Connection is SqlConnection)
+                        {
+                            param = new SqlParameter();
+                        }
+                        else if (session.Connection is MySqlConnection)
+                        {
+                            param = new MySqlParameter();
+                        }
+                        else if (session.DbFactory != null)
+                        {
+                            param = session.DbFactory.CreateParameter();
+                        }
+                        else
+                        {
+                            throw new LTCingFWException("不支持该数据库！");
+                        }
+                        if (attr.ColSize == 0)
+                        {
+                            param.Size = attr.ColSize;
+                        }
+                        param.ParameterName = mark + attr.ColName;
+                        param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                        ValueList.Add(param);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw new LTCingFWException("更新式中获取SET所有列名的值错误！", e);
+            }
+
         }
         /// <summary>
         /// DbParameter值转换
@@ -251,125 +261,146 @@ namespace LTCingFW
         /// <returns></returns>
         private object getProperDbParameterValue(object value, int colType)
         {
-            //空
-            if (value == null || value is System.DBNull)
+            try
             {
-                return System.DBNull.Value;
-            }
-            //以字符串模拟其他类型
+                //空
+                if (value == null || value is System.DBNull)
+                {
+                    return System.DBNull.Value;
+                }
+                //以字符串模拟其他类型
 
-            
-            if (value is string && value.ToString().Trim() == "")
-            {
-                return System.DBNull.Value;
-            }
-            if (colType > 0 && colType <= 100)
-            {
-                //SqlServer Type
-                if (FwUtilFunc.sqlserverTypeIsString(colType))
+
+                if (value is string && value.ToString().Trim() == "")
                 {
-                    return value;
+                    return System.DBNull.Value;
                 }
-                else if (FwUtilFunc.sqlserverTypeIsNumber(colType))
+                if (colType > 0 && colType <= 100)
                 {
-                    return Decimal.Parse((string)value);
+                    //SqlServer Type
+                    if (FwUtilFunc.sqlserverTypeIsString(colType))
+                    {
+                        return value;
+                    }
+                    else if (FwUtilFunc.sqlserverTypeIsNumber(colType))
+                    {
+                        return Decimal.Parse((string)value);
+                    }
+                    else if (FwUtilFunc.sqlserverTypeIsDate(colType))
+                    {
+                        return Convert.ToDateTime((string)value);//使用DateTime
+                    }
+                    else
+                    {
+                        throw new LTCingFWException(String.Format("不可处理{0}的SqlServer数据类型", colType));
+                    }
                 }
-                else if (FwUtilFunc.sqlserverTypeIsDate(colType))
+                else if (colType > 100 && colType <= 200)
                 {
-                    return Convert.ToDateTime((string)value);//使用DateTime
+                    //Oracle Type
+                    if (FwUtilFunc.oracleTypeIsString(colType))
+                    {
+                        return value;
+                    }
+                    else if (FwUtilFunc.oracleTypeIsNumber(colType))
+                    {
+                        return Decimal.Parse((string)value);
+                    }
+                    else if (FwUtilFunc.oracleTypeIsDate(colType))
+                    {
+                        return Convert.ToDateTime((string)value);//使用DateTime
+                    }
+                    else
+                    {
+                        throw new LTCingFWException(String.Format("不可处理{0}的Oracle数据类型", colType));
+                    }
+                }
+                else if (colType > 200 && colType <= 300)
+                {
+                    //MySql
+                    if (FwUtilFunc.mysqlTypeIsString(colType))
+                    {
+                        return value;
+                    }
+                    if (FwUtilFunc.mysqlTypeIsNumber(colType))
+                    {
+                        return Decimal.Parse((string)value);
+                    }
+                    if (FwUtilFunc.mysqlTypeIsDate(colType))
+                    {
+                        return Convert.ToDateTime((string)value);//使用DateTime
+                    }
+                    else
+                    {
+                        throw new LTCingFWException(String.Format("不可处理{0}的MySql数据类型", colType));
+                    }
+                }
+                else if (colType > 1000 && colType <= 1100)
+                {
+                    object res = null;
+                    switch (colType)
+                    {
+                        case (int)OrmDataType.CommonType.INT:
+                            res = Convert.ToInt32(value);
+                            break;
+                        case (int)OrmDataType.CommonType.STRING:
+                            res = Convert.ToString(value);
+                            break;
+                        case (int)OrmDataType.CommonType.DECIMAL:
+                            res = Convert.ToDecimal(value);
+                            break;
+                        case (int)OrmDataType.CommonType.BOOL:
+                            if (value is bool)
+                            {
+                                res = value;
+                            }
+                            else if(value is string)
+                            {
+                                if (value as string == "0")
+                                {
+                                    res = false;
+                                }
+                                else
+                                {
+                                    res = true;
+                                }
+                            }
+                            else
+                            {
+                                res = Convert.ToBoolean(value);
+                            }
+                            break;
+                        case (int)OrmDataType.CommonType.DATE:
+                            res = Convert.ToDateTime(value);
+                            if ((DateTime)res == new DateTime())
+                            {
+                                res = System.DBNull.Value;
+                            }
+                            break;
+                        case (int)OrmDataType.CommonType.BINARY:
+                            if (value is byte[])
+                            {
+                                res = value;
+                            }
+                            else
+                            {
+                                throw new LTCingFWException("BINARY 类型必须是byte[]类型！");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    return res;
                 }
                 else
                 {
-                    throw new LTCingFWException(String.Format("不可处理{0}的SqlServer数据类型", colType));
+                    throw new LTCingFWException(String.Format("没有{0}数据类型", colType));
                 }
             }
-            else if (colType > 100 && colType <= 200)
+            catch (Exception e)
             {
-                //Oracle Type
-                if (FwUtilFunc.oracleTypeIsString(colType))
-                {
-                    return value;
-                }
-                else if (FwUtilFunc.oracleTypeIsNumber(colType))
-                {
-                    return Decimal.Parse((string)value);
-                }
-                else if (FwUtilFunc.oracleTypeIsDate(colType))
-                {
-                    return Convert.ToDateTime((string)value);//使用DateTime
-                }
-                else
-                {
-                    throw new LTCingFWException(String.Format("不可处理{0}的Oracle数据类型", colType));
-                }
+                throw new LTCingFWException("参数赋值前根据ColType类型进行数据类型强转时错误！类型[" + colType + "] 值为["+ value.ToString() + "]", e);
             }
-            else if (colType > 200 && colType <= 300)
-            {
-                //MySql
-                if (FwUtilFunc.mysqlTypeIsString(colType))
-                {
-                    return value;
-                }
-                if (FwUtilFunc.mysqlTypeIsNumber(colType))
-                {
-                    return Decimal.Parse((string)value);
-                }
-                if (FwUtilFunc.mysqlTypeIsDate(colType))
-                {
-                    return Convert.ToDateTime((string)value);//使用DateTime
-                }
-                else
-                {
-                    throw new LTCingFWException(String.Format("不可处理{0}的MySql数据类型", colType));
-                }
-            }
-            else if (colType > 1000 && colType <= 1100)
-            {
-                object res = null;
-                switch (colType)
-                {
-                    case (int)OrmDataType.CommonType.INT:
-                        res = Convert.ToInt32(value);
-                        break;
-                    case (int)OrmDataType.CommonType.STRING:
-                        res = value.ToString();
-                        break;
-                    case (int)OrmDataType.CommonType.DECIMAL:
-                        res = Convert.ToDecimal(value);
-                        break;
-                    case (int)OrmDataType.CommonType.BOOL:
-                        if (value is bool)
-                        {
-                            res = value;
-                        }
-                        else
-                        {
-                            res = Convert.ToBoolean(value);
-                        }
-                        break;
-                    case (int)OrmDataType.CommonType.DATE:
-                        res = Convert.ToDateTime(value);
-                        break;
-                    case (int)OrmDataType.CommonType.BINARY:
-                        if (value is byte[])
-                        {
-                            res = value;
-                        }
-                        else
-                        {
-                            throw new LTCingFWException("BINARY 类型必须是byte[]类型！");
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                return res;
-            }
-            else
-            {
-                throw new LTCingFWException(String.Format("没有{0}数据类型", colType));
-            }
-            
 
 
         }
@@ -390,92 +421,88 @@ namespace LTCingFW
         /// <param name="fuzzy">是否为模糊查询</param>
         private void SetModelWhereSqlTextAndValues(DBSession session, OrmBaseModel model, StringBuilder sqlText, List<DbParameter> ValueList, bool onlyPrimaryKey)
         {
-            if (model == null && this is OrmBaseModel)
+            try
             {
-                model = (OrmBaseModel)this;
-            }
-            bool hasPrimaryKey = false;
-            //遍历属性值
-            foreach (OrmColumnBean bean in model.OrmList)
-            {
-
-                if (bean.Value != null)
+                if (model == null && this is OrmBaseModel)
                 {
-                    DbParameter param = null;
-                    OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                    if (attr.PrimaryKey && bean.Value != null)
-                    {
-                        hasPrimaryKey = true;
-                    }
+                    model = (OrmBaseModel)this;
+                }
+                bool hasPrimaryKey = false;
+                //遍历属性值
+                foreach (OrmColumnBean bean in model.OrmList)
+                {
 
-                    if (onlyPrimaryKey && !attr.PrimaryKey) { }
-                    else
+                    if (bean.Value != null)
                     {
-                        string mark = "@";
-                        if (session.Connection is OracleConnection)
+                        DbParameter param = null;
+                        OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                        if (attr.PrimaryKey && bean.Value != null)
                         {
-                            param = new OracleParameter();
-                            mark = ":";
+                            hasPrimaryKey = true;
                         }
-                        else if (session.Connection is SqlConnection)
-                        {
-                            param = new SqlParameter();
-                        }
-                        else if (session.Connection is MySqlConnection)
-                        {
-                            param = new MySqlParameter();
-                        }
+
+                        if (onlyPrimaryKey && !attr.PrimaryKey) { }
                         else
                         {
-                            throw new LTCingFWException("只接受Oracle SqlServer MySql 的连接！");
-                        }
+                            string mark = "@";
+                            if (session.Connection is OracleConnection)
+                            {
+                                param = new OracleParameter();
+                                mark = ":";
+                            }
+                            else if (session.Connection is SqlConnection)
+                            {
+                                param = new SqlParameter();
+                            }
+                            else if (session.Connection is MySqlConnection)
+                            {
+                                param = new MySqlParameter();
+                            }
+                            else if (session.DbFactory != null)
+                            {
+                                param = session.DbFactory.CreateParameter();
+                            }
+                            else
+                            {
+                                throw new LTCingFWException("只接受Oracle SqlServer MySql 的连接！");
+                            }
 
-                        param.ParameterName = mark + attr.ColName;
-                        if (attr.ColSize != 0)
-                        {
-                            param.Size = attr.ColSize;
-                        }
-                        if (model.FuzzyColumnNames.Contains(bean.ColumnName))
-                        {
-                            sqlText.Append(" AND ").Append(attr.ColName).Append(" LIKE ").Append(mark).Append(attr.ColName);
-                            param.Value = "%" + getProperDbParameterValue(bean.Value, attr.ColType) + "%";
-                            ValueList.Add(param);
-                        }
-                        else
-                        {
-                            sqlText.Append(" AND ").Append(attr.ColName).Append(" = ").Append(mark).Append(attr.ColName);
-                            param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
-                            ValueList.Add(param);
+                            param.ParameterName = mark + attr.ColName;
+                            if (attr.ColSize != 0)
+                            {
+                                param.Size = attr.ColSize;
+                            }
+                            if (model.FuzzyColumnNames.Contains(bean.ColumnName))
+                            {
+                                sqlText.Append(" AND ").Append(attr.ColName).Append(" LIKE ").Append(mark).Append(attr.ColName);
+                                param.Value = "%" + getProperDbParameterValue(bean.Value, attr.ColType) + "%";
+                                ValueList.Add(param);
+                            }
+                            else
+                            {
+                                sqlText.Append(" AND ").Append(attr.ColName).Append(" = ").Append(mark).Append(attr.ColName);
+                                param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                                ValueList.Add(param);
+                            }
+
                         }
 
                     }
-
+                }
+                if (onlyPrimaryKey && !hasPrimaryKey)
+                {
+                    throw new LTCingFWException("按照主键查询未找到主键或主键值为空！");
                 }
             }
-            if (onlyPrimaryKey && !hasPrimaryKey)
+            catch (Exception e)
             {
-                throw new LTCingFWException("按照主键查询未找到主键或主键值为空！");
+                throw new LTCingFWException("生成WHERE条件语句以及设置值出错！", e);
             }
+
 
         }
 
-        public int GetItemCount(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            StringBuilder sql = new StringBuilder();
-            sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
-            List<DbParameter> ValueList = new List<DbParameter>();
-            SetModelWhereSqlTextAndValues(session, model, sql, ValueList, false);
-            DbCommand cmd = session.Connection.CreateCommand();
-            cmd.CommandText = sql.ToString();
-            cmd.Parameters.AddRange(ValueList.ToArray());
-            object result = cmd.ExecuteScalar();
 
-            return (int)(Decimal)result;
-        }
 
 
         /// <summary>
@@ -487,59 +514,124 @@ namespace LTCingFW
         /// <returns></returns>
         private String addPaginationSql(String sql, DBSession session, OrmBaseModel model)
         {
+            try
+            {
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                int max_limit = model.UpLimitNumber;
+                int min_limit = model.LowLimitNumber;
+                String allColumnString = GetAllColumnNameStr(session, model);
+                StringBuilder sb = new StringBuilder();
+                String orderby = "";
+                if (FwUtilFunc.StringIsEmpty(model.OrderBy))
+                {
+                    foreach (OrmColumnBean bean in model.OrmList)
+                    {
+                        if (bean.OrmColumnAttributeDic[session.DbAlias].PrimaryKey)
+                        {
+                            orderby = " " + bean.ColumnName + " DESC ";
+                        }
+                    }
+                }
+                else
+                {
+                    orderby = model.OrderBy;
+                }
+
+                //oracle
+                if (session.Connection is OracleConnection)
+                {
+
+                    sql = sql + " ORDER BY " + orderby;
+                    sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
+                    sb.Append(" ( SELECT ").Append(" ROWNUM RN , ").Append(allColumnString);
+                    sb.Append(" FROM ( ").Append(sql).Append(" ) ").Append(" WHERE ROWNUM <= ").Append(max_limit).Append(" ) ");
+                    sb.Append(" WHERE RN >= ").Append(min_limit);
+
+                }
+                //sqlserver
+                if (session.Connection is SqlConnection)
+                {
+                    sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
+                    sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER( ORDER BY ").Append(orderby).Append(" ) RN, ");
+                    sb.Append(allColumnString).Append(" FROM ( ").Append(sql).Append(" ) t ) w2 ");
+                    sb.Append(" WHERE w2.RN >= ").Append(min_limit);
+                    sb.Append(" ORDER BY w2.RN ASC ");
+
+                }
+                //mysql
+                if (session.Connection is MySqlConnection)
+                {
+                    sql = sql + " ORDER BY " + orderby;
+                    sb.Append(sql).Append(" LIMIT ").Append(min_limit - 1).Append(",").Append(model.PageItemCount);
+                }
+
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+
+                throw new LTCingFWException("生成分页语句出错！", e);
+            }
+
+        }
+
+        /// <summary>
+        /// 获取条目数(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public int GetItemCount(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return GetItemCount(session, null);
+        }
+
+        /// <summary>
+        /// 获取条目数
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public int GetItemCount(DBSession session, OrmBaseModel model)
+        {
             if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
             }
-            int max_limit = model.UpLimitNumber;
-            int min_limit = model.LowLimitNumber;
-            String allColumnString = GetAllColumnNameStr(session, model);
-            StringBuilder sb = new StringBuilder();
-            String orderby = "";
-            if (FwUtilFunc.StringIsEmpty(model.OrderBy))
+            StringBuilder sql = new StringBuilder();
+            sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
+            List<DbParameter> ValueList = new List<DbParameter>();
+            SetModelWhereSqlTextAndValues(session, model, sql, ValueList, false);
+            DbCommand cmd = session.Connection.CreateCommand();
+            if (FwUtilFunc.StringIsNotEmpty(model.Where))
             {
-                foreach (OrmColumnBean bean in model.OrmList)
-                {
-                    if (bean.OrmColumnAttributeDic[session.DbAlias].PrimaryKey)
-                    {
-                        orderby = " " + bean.ColumnName + " DESC ";
-                    }
-                }
+                sql.Append(model.Where);
             }
-            else
+            cmd.CommandText = sql.ToString();
+            logger.Debug(sql.ToString());
+            cmd.Parameters.AddRange(ValueList.ToArray());
+            object result = cmd.ExecuteScalar();
+            return Convert.ToInt32(result);
+        }
+
+        /// <summary>
+        /// 分页查询(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public DataTable SelectPage(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
             {
-                orderby = model.OrderBy;
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
             }
-
-            //oracle
-            if (session.Connection is OracleConnection)
-            {
-
-                sql = sql + " ORDER BY " + orderby;
-                sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
-                sb.Append(" ( SELECT ").Append(" ROWNUM RN , ").Append(allColumnString);
-                sb.Append(" FROM ( ").Append(sql).Append(" ) ").Append(" WHERE ROWNUM <= ").Append(max_limit).Append(" ) ");
-                sb.Append(" WHERE RN >= ").Append(min_limit);
-
-            }
-            //sqlserver
-            if (session.Connection is SqlConnection)
-            {
-                sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
-                sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER( ORDER BY ").Append(orderby).Append(" ) RN, ");
-                sb.Append(allColumnString).Append(" FROM ( ").Append(sql).Append(" ) t ) w2 ");
-                sb.Append(" WHERE w2.RN >= ").Append(min_limit);
-                sb.Append(" ORDER BY w2.RN ASC ");
-
-            }
-            //mysql
-            if (session.Connection is MySqlConnection)
-            {
-                sql = sql + " ORDER BY " + orderby;
-                sb.Append(sql).Append(" LIMIT ").Append(min_limit - 1).Append(",").Append(model.PageItemCount);
-            }
-
-            return sb.ToString();
+            return SelectPage(session, null);
         }
 
         /// <summary>
@@ -590,6 +682,21 @@ namespace LTCingFW
         }
 
         /// <summary>
+        /// 分页查询(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectPage<T>(DBSession session) where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectPage<T>(session, null);
+        }
+
+        /// <summary>
         /// 分页查询
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -609,6 +716,20 @@ namespace LTCingFW
                 QueryForForeignOrmModel(session, ormModel);
             }
             return resT;
+        }
+
+        /// <summary>
+        /// 默认选择,根据有值列(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public DataTable Select(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Select(session, null);
         }
 
         /// <summary>
@@ -664,7 +785,22 @@ namespace LTCingFW
         }
 
         /// <summary>
-        /// 默认选择,根据有值列
+        /// 查询，返回List<T>(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectT<T>(DBSession session) where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectT<T>(session);
+        }
+
+        /// <summary>
+        /// 查询，返回List<T>
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="session"></param>
@@ -684,6 +820,21 @@ namespace LTCingFW
             }
             return resT;
         }
+
+        /// <summary>
+        /// 通过主键查询(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public DataTable SelectByPrimaryKey(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectByPrimaryKey(session, null);
+        }
+
         /// <summary>
         /// 通过主键查询
         /// </summary>
@@ -716,8 +867,24 @@ namespace LTCingFW
             }
             return Select(conn, session.Transaction, sqlText.ToString(), ValueList.ToArray());
         }
+
         /// <summary>
-        /// 通过主键查询
+        /// 通过主键查询,返回List<T>(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectByPrimaryKey<T>(DBSession session) where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectByPrimaryKey<T>(session, null);
+        }
+
+        /// <summary>
+        /// 通过主键查询,返回List<T>
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="session"></param>
@@ -801,7 +968,7 @@ namespace LTCingFW
                     FwUtilFunc.SetObjectPropertyValue(inst, foreignColumnNames[i], value);
                 }
                 //3.3 查询
-                MethodInfo Select_Method = typeof(OrmBaseDao).GetMethod("SelectT",new Type[] { typeof(DBSession),typeof(OrmBaseModel)});
+                MethodInfo Select_Method = typeof(OrmBaseDao).GetMethod("SelectT", new Type[] { typeof(DBSession), typeof(OrmBaseModel) });
                 MethodInfo Cur_Select_Method = Select_Method.MakeGenericMethod(infoType);
                 object Final_Result = Cur_Select_Method.Invoke(this, new object[] { session, inst as OrmBaseModel });
                 //DataTable result = Select(session, inst as OrmBaseModel);
@@ -828,7 +995,7 @@ namespace LTCingFW
         public DataTable Select(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
         {
             logger.Debug(sql);
-            DbDataAdapter adapter = DbConnectionFactory.GetDataAdapter(conn, sql);
+            DbDataAdapter adapter = DBSession.GetDataAdapter(conn, sql);
             if (dbTransaction != null)
             {
                 adapter.SelectCommand.Transaction = dbTransaction;
@@ -840,23 +1007,17 @@ namespace LTCingFW
         }
 
         /// <summary>
-        /// 根据完整的SQL进行查询
+        /// 默认插入,全列插入(OrmModel使用)
         /// </summary>
         /// <param name="session"></param>
-        /// <param name="sql"></param>
         /// <returns></returns>
-        public DataTable Select(DBSession session, string sql)
+        public int Insert(DBSession session)
         {
-            logger.Debug(sql);
-            DbDataAdapter adapter = DbConnectionFactory.GetDataAdapter(session.Connection, sql);
-            DbCommand cmd = session.Connection.CreateCommand();
-            if (session.Transaction != null)
+            if (!(this is OrmBaseModel))
             {
-                cmd.Transaction = session.Transaction;
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
             }
-            DataTable resultTable = new DataTable();
-            adapter.Fill(resultTable);
-            return resultTable;
+            return Insert(session, null);
         }
 
         /// <summary>
@@ -874,12 +1035,10 @@ namespace LTCingFW
             DbConnection conn = session.Connection;
             String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ( ");
+            sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ");
             List<DbParameter> ValueList = new List<DbParameter>();
 
             GetInsertColumnValues(session, model, ValueList, sqlText);
-
-
 
             //清除缓存
             if (CacheFactory.IsCached(session, model))
@@ -903,14 +1062,50 @@ namespace LTCingFW
             return executeSqlNotQuery(conn, dbTransaction, sql, parameters);
         }
 
+        /// <summary>
+        /// 依据有值列删除
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public int Delete(DBSession session)
+        {
+            return Delete(session, false);
+        }
 
         /// <summary>
-        /// 默认删除,根据有值列
+        /// 根据有值列删除(OrmModel使用)
         /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="dbTransaction"></param>
+        /// <param name="session"></param>
+        /// <param name="onlyByPk">是否只依靠主键</param>
+        /// <returns></returns>
+        public int Delete(DBSession session, bool onlyByPk)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Delete(session, null, onlyByPk);
+        }
+
+        /// <summary>
+        /// 依据有值列删除
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
         /// <returns></returns>
         public int Delete(DBSession session, OrmBaseModel model)
+        {
+            return Delete( session,  model, false);
+        }
+
+        /// <summary>
+        /// 根据有值列删除
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <param name="onlyByPk">是否只依据主键删除</param>
+        /// <returns></returns>
+        public int Delete(DBSession session, OrmBaseModel model, bool onlyByPk)
         {
             if (model == null && this is OrmBaseModel)
             {
@@ -921,7 +1116,7 @@ namespace LTCingFW
             StringBuilder sqlText = new StringBuilder();
             sqlText.Append(" DELETE FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
             List<DbParameter> ValueList = new List<DbParameter>();
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
+            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
             //清除缓存
             if (CacheFactory.IsCached(session, model))
             {
@@ -942,6 +1137,40 @@ namespace LTCingFW
             return executeSqlNotQuery(conn, dbTransaction, sql, parameters);
         }
 
+        /// <summary>
+        /// 默认以主键更新
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public int Update(DBSession session)
+        {
+            return Update(session, true);
+        }
+
+        /// <summary>
+        /// 默认修改,通过主键修改其他列(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public int Update(DBSession session, bool onlyByPk)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Update(session, null, onlyByPk);
+        }
+
+        /// <summary>
+        /// 依据主键更新
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public int Update(DBSession session, OrmBaseModel model)
+        {
+            return Update( session,  model, true);
+        }
 
         /// <summary>
         /// 默认修改,通过主键修改其他列
@@ -949,7 +1178,7 @@ namespace LTCingFW
         /// <param name="conn"></param>
         /// <param name="dbTransaction"></param>
         /// <returns></returns>
-        public int Update(DBSession session, OrmBaseModel model)
+        public int Update(DBSession session, OrmBaseModel model, bool onlyByPk)
         {
             if (model == null && this is OrmBaseModel)
             {
@@ -962,7 +1191,7 @@ namespace LTCingFW
             List<DbParameter> ValueList = new List<DbParameter>();
             GetUpdateSetColumnValues(session, model, ValueList);
             sqlText.Append(" WHERE 1=1 ");
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, true);
+            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
             //清除缓存
             if (CacheFactory.IsCached(session, model))
             {
@@ -1007,7 +1236,7 @@ namespace LTCingFW
         /// </summary>
         /// <param name="conn">连接</param>
         /// <param name="sql">SQL语句</param>
-        public void executeSqlNotQuery(DBSession session, String sql)
+        public int executeSqlNotQuery(DBSession session, String sql)
         {
             logger.Debug(sql);
             DbCommand cmd = session.Connection.CreateCommand();
@@ -1016,7 +1245,27 @@ namespace LTCingFW
                 cmd.Transaction = session.Transaction;
             }
             cmd.CommandText = sql;
-            cmd.ExecuteNonQuery();
+            return cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// 根据完整的SQL进行查询
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="sql"></param>
+        /// <returns></returns>
+        public DataTable executeSqlQuery(DBSession session, string sql)
+        {
+            logger.Debug(sql);
+            DbDataAdapter adapter = DBSession.GetDataAdapter(session.Connection, sql);
+            DbCommand cmd = session.Connection.CreateCommand();
+            if (session.Transaction != null)
+            {
+                cmd.Transaction = session.Transaction;
+            }
+            DataTable resultTable = new DataTable();
+            adapter.Fill(resultTable);
+            return resultTable;
         }
     }
 }

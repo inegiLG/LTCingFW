@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LTCingFW.beans;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,8 @@ namespace LTCingFW
         public bool IsOpen { get; set; } = false;
         //循环时间,默认1000ms
         public int LoopRate { set; get; } = 1000;
+
+        public StateLight ThreadLight { get; set; } = new StateLight();
 
         public abstract void run(object param);
 

@@ -93,6 +93,8 @@ namespace LTCingFW
         public string Database { get; set; }
         [XmlElement(ElementName = "connectionstring", IsNullable = true)]
         public string ConnectionString { get; set; }
+        [XmlElement(ElementName = "providername", IsNullable = true)]
+        public string ProviderName { get; set; }
 
         public const String OracleDBType = "oracle";
         public const String SqlServerDBType = "sqlserver";
@@ -109,6 +111,7 @@ namespace LTCingFW
         public string LocalPosition { get; set; }
         [XmlElement(ElementName = "netposition", IsNullable = true)]
         public string NetPosition { get; set; }
+
     }
 
 

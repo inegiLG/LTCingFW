@@ -53,20 +53,29 @@ namespace LTCingFW
                 //parameters.OutputAssembly = LTCingFWDllName;
                 //加入程序集
                 Assembly[] AllAssembly = AppDomain.CurrentDomain.GetAssemblies();
-                AssemblyName[] UsedAssembly = System.Reflection.Assembly.GetEntryAssembly().GetReferencedAssemblies();
-                AssemblyName[] UsedAssembly2 = System.Reflection.Assembly.GetExecutingAssembly().GetReferencedAssemblies();
+                AssemblyName[] UsedAssembly = Assembly.GetEntryAssembly().GetReferencedAssemblies();
+                AssemblyName[] UsedAssembly2 = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
                 foreach (Assembly item in AllAssembly)
                 {
-                    //foreach (AssemblyName an in UsedAssembly)
-                    //{
-                    //    if (an.FullName == item.FullName)
-                    //    {
-                    //        parameters.ReferencedAssemblies.Add(item.Location);
-                    //    }
-                    //}
                     if (!item.FullName.Contains("Microsoft.GeneratedCode"))
                     {
                         parameters.ReferencedAssemblies.Add(item.Location);
+                    }
+                }
+                foreach (AssemblyName itemName in UsedAssembly2)
+                {
+                    bool hasFlag = false;
+                    foreach (string ass in parameters.ReferencedAssemblies)
+                    {
+                        if (ass.Contains(itemName.Name + ".dll"))
+                        {
+                            hasFlag = true;
+                            break;
+                        }
+                    }
+                    if (!hasFlag)
+                    {
+                        parameters.ReferencedAssemblies.Add(itemName.Name+".dll");
                     }
                 }
                 //string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); 

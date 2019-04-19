@@ -31,6 +31,11 @@ namespace LTCingFW.opc
         public List<ItemInfo> ItemGroupList { get; } = new List<ItemInfo>();
 
         /// <summary>
+        /// 事务ID
+        /// </summary>
+        public int TransactionID { get; set; }
+
+        /// <summary>
         /// 有关事务的取消ID
         /// </summary>
         public int CancelID { get; set; }
@@ -121,6 +126,7 @@ namespace LTCingFW.opc
                 info.Error = true;
             }
             CommandState = CommandStateEnum.UnDo;
+            TransactionID = 0;
             CancelID = 0;
         }
 
@@ -139,23 +145,25 @@ namespace LTCingFW.opc
         {
             try
             {
+                OPCCommand cmd;
                 lock (this)
                 {
-                    int[] ChangedClientIds = new int[NumItems];
-                    //数据变化写入
-                    for (int i = 1; i <= NumItems; i++)
-                    {
-                        ItemInfo info = GetItemByClientHandleID(Convert.ToInt32(ClientHandles.GetValue(i)));
-                        info.Value = ItemValues.GetValue(i);
-                        info.Quality = Convert.ToInt32(Qualities.GetValue(i));
-                        info.TimeStamp = Convert.ToDateTime(TimeStamps.GetValue(i));
-                        ChangedClientIds[i - 1] = Convert.ToInt32(ClientHandles.GetValue(i));
-                    }
-                    //通知外部
-                    if (this.OuterNotice_DataChangeSensed != null) {
-                        this.OuterNotice_DataChangeSensed(this, ChangedClientIds);
-                    }
+                    cmd = this.Clone() as OPCCommand;
                 }
+                DateTime now = DateTime.Now;
+                int[] ChangedClientIds = new int[NumItems];
+                //数据变化写入
+                for (int i = 1; i <= NumItems; i++)
+                {
+                    ItemInfo info = cmd.GetItemByClientHandleID(Convert.ToInt32(ClientHandles.GetValue(i)));
+                    info.Value = ItemValues.GetValue(i);
+                    info.Quality = Convert.ToInt32(Qualities.GetValue(i));
+                    info.TimeStamp = now;
+                    ChangedClientIds[i - 1] = Convert.ToInt32(ClientHandles.GetValue(i));
+                }
+                cmd.TransactionID = TransactionID;
+                //通知外部
+                this.OuterNotice_DataChangeSensed(cmd, ChangedClientIds);
             }
             catch (Exception e)
             {
@@ -178,32 +186,36 @@ namespace LTCingFW.opc
         {
             try
             {
+                OPCCommand cmd;
                 lock (this)
                 {
-                    for (int i = 0; i < NumItems; i++)
-                    {
-                        int clientID = Convert.ToInt32(ClientHandles.GetValue(i + 1));
-                        int error = Convert.ToInt32(Errors.GetValue(i + 1));
-                        int quality = Convert.ToInt32(Qualities.GetValue(i + 1));
-                        ItemInfo info = this.GetItemByClientHandleID(clientID);
-                        if (info != null)
-                        {
-                            info.Value = ItemValues.GetValue(i + 1);
-                            info.Quality = Convert.ToInt32(Qualities.GetValue(i + 1));
-                            info.TimeStamp = Convert.ToDateTime(TimeStamps.GetValue(i + 1));
-                        }
-                        if (clientID != 0 && error == 0 && quality != 0)
-                        {
-                            info.Error = false;
-                        }
-                    }
-                    this.CommandState = CommandStateEnum.Read_Over;
-                    //通知外部
-                    if (this.OuterNotice_AsyncReadComplete != null) {
-                        this.OuterNotice_AsyncReadComplete(this);
-                    }
-                    
+                    cmd = this.Clone() as OPCCommand;
                 }
+                DateTime now = DateTime.Now;
+                for (int i = 0; i < NumItems; i++)
+                {
+                    int clientID = Convert.ToInt32(ClientHandles.GetValue(i + 1));
+                    int error = Convert.ToInt32(Errors.GetValue(i + 1));
+                    int quality = Convert.ToInt32(Qualities.GetValue(i + 1));
+                    ItemInfo info = cmd.GetItemByClientHandleID(clientID);
+                    if (info != null)
+                    {
+                        info.Value = ItemValues.GetValue(i + 1);
+                        info.Quality = Convert.ToInt32(Qualities.GetValue(i + 1));
+                        info.TimeStamp = now;
+                    }
+                    if (clientID != 0 && error == 0 && quality != 0)
+                    {
+                        info.Error = false;
+                    }
+                }
+                cmd.TransactionID = TransactionID;
+                cmd.CommandState = CommandStateEnum.Read_Over;
+                this.CommandState = CommandStateEnum.Read_Over;
+                //通知外部
+                this.OuterNotice_AsyncReadComplete(cmd);
+                    
+                
             }
             catch (Exception)
             {
@@ -223,26 +235,30 @@ namespace LTCingFW.opc
         {
             try
             {
+                OPCCommand cmd;
                 lock (this)
                 {
-                    for (int i = 0; i < NumItems; i++)
-                    {
-                        int clientID = Convert.ToInt32(ClientHandles.GetValue(i + 1));
-                        int error = Convert.ToInt32(Errors.GetValue(i + 1));
-                        ItemInfo info = this.GetItemByClientHandleID(clientID);
-                        if (clientID != 0 && info != null && error == 0)
-                        {
-                            info.Error = false;
-                        }
-                    }
-                    this.CommandState = CommandStateEnum.Write_Over;
-                    //通知外部
-                    if (this.OuterNotice_AsyncWriteComplete != null)
-                    {
-                        this.OuterNotice_AsyncWriteComplete(this);
-                    }
-                    
+                    cmd = this.Clone() as OPCCommand;
                 }
+                DateTime now = DateTime.Now;
+                for (int i = 0; i < NumItems; i++)
+                {
+                    int clientID = Convert.ToInt32(ClientHandles.GetValue(i + 1));
+                    int error = Convert.ToInt32(Errors.GetValue(i + 1));
+                    ItemInfo info = cmd.GetItemByClientHandleID(clientID);
+                    if (clientID != 0 && info != null && error == 0)
+                    {
+                        info.Error = false;
+                    }
+                    info.TimeStamp = now;
+                }
+                cmd.TransactionID = TransactionID;
+                cmd.CommandState = CommandStateEnum.Write_Over;
+                this.CommandState = CommandStateEnum.Write_Over;
+                //通知外部
+                this.OuterNotice_AsyncWriteComplete(cmd);
+                    
+                
             }
             catch (Exception)
             {
@@ -273,6 +289,7 @@ namespace LTCingFW.opc
         public object Clone()
         {
             OPCCommand cmd = new OPCCommand();
+            cmd.TransactionID = this.TransactionID;
             cmd.CancelID = this.CancelID;
             cmd.CommandName = this.CommandName;
             cmd.CommandState = this.CommandState;

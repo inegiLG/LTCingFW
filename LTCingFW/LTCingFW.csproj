@@ -65,6 +65,8 @@
     <Compile Include="beans\FwAopBean.cs" />
     <Compile Include="beans\FwInstanceBean.cs" />
     <Compile Include="beans\ThreadContext.cs" />
+    <Compile Include="beans\ThreadInfo.cs" />
+    <Compile Include="beans\StateLight.cs" />
     <Compile Include="beans\XmlConfigStruct.cs" />
     <Compile Include="core\FWAppContainer.cs" />
     <Compile Include="core\FWConfigs.cs" />
@@ -91,7 +93,6 @@
     <Compile Include="orm\CacheFactory.cs" />
     <Compile Include="orm\CacheNode.cs" />
     <Compile Include="orm\DbConfigInfo.cs" />
-    <Compile Include="orm\DbConnectionFactory.cs" />
     <Compile Include="orm\DBSession.cs" />
     <Compile Include="orm\ForeignOrmModel.cs" />
     <Compile Include="orm\LZModelEnum.cs" />

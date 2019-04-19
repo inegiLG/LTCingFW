@@ -25,7 +25,7 @@ namespace LTCingFW
         /// <summary>
         /// 所有的DB连接
         /// </summary>
-        internal static Dictionary<String, DbConnectionStringBuilder> dbDic { get; } = new Dictionary<String, DbConnectionStringBuilder>();
+        internal static Dictionary<String, DB_Leaf> dbDic { get; } = new Dictionary<String, DB_Leaf>();
 
         /// <summary>
         /// 线程上下文

@@ -41,17 +41,17 @@ namespace LTCingFW.unitdata
         {
             DBSession session = LTCingFW.LTCingFWSet.GetThreadContext().DBSession;
             string sqlText = MYSQL_QUERY_DATABASE;
-            return udDao.Select(session, sqlText);
+            return udDao.executeSqlQuery(session, sqlText);
         }
 
         /// <summary>
         /// 使用UDDB
         /// </summary>
         [DBSession("uudb")]
-        public virtual void UseUDDB()
+        public virtual int UseUDDB()
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.executeSqlNotQuery(session, mysql_use_db);
+            return udDao.executeSqlNotQuery(session, mysql_use_db);
         }
 
 
@@ -60,37 +60,36 @@ namespace LTCingFW.unitdata
         /// </summary>
         /// <param name="dbAlias"></param>
         [DBSession("uudb")]
-        public virtual void CreateUDMySqlTable()
+        public virtual int CreateUDMySqlTable()
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.executeSqlNotQuery(session, mysql_create_ud_table);
-            
+            return udDao.executeSqlNotQuery(session, mysql_create_ud_table);
         }
 
 
         //插入
         [DBSession("uudb",OpenTransaction = true)]
-        public virtual void InsertUDData(OrmBaseModel tbModel)
+        public virtual int InsertUDData(OrmBaseModel tbModel)
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.Insert(session, tbModel);
+            return udDao.Insert(session, tbModel);
         }
 
 
         //更新
         [DBSession("uudb", OpenTransaction = true)]
-        public virtual void UpdateUDData(OrmBaseModel tbModel)
+        public virtual int UpdateUDData(OrmBaseModel tbModel)
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.Update(session, tbModel);
+            return udDao.Update(session, tbModel,true);
         }
 
         //删除
         [DBSession("uudb", OpenTransaction = true)]
-        public virtual void DeleteUDData(OrmBaseModel tbModel)
+        public virtual int DeleteUDData(OrmBaseModel tbModel)
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.Delete(session, tbModel);
+            return udDao.Delete(session, tbModel,true);
         }
 
         //查询
@@ -158,7 +157,7 @@ namespace LTCingFW.unitdata
         public virtual int QueryNewestRowIndex()
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            DataTable res = udDao.Select(session, mysql_get_max_row_id);
+            DataTable res = udDao.executeSqlQuery(session, mysql_get_max_row_id);
             if (res.Rows[0][0] is System.DBNull)
             {
                 return 0;
@@ -167,17 +166,17 @@ namespace LTCingFW.unitdata
         }
 
         [DBSession("uudb")]
-        public virtual void LockRowInfoTable()
+        public virtual int LockRowInfoTable()
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.executeSqlNotQuery(session, mysql_lock_table_write);
+            return udDao.executeSqlNotQuery(session, mysql_lock_table_write);
         }
 
         [DBSession("uudb")]
-        public virtual void UnLockTables()
+        public virtual int UnLockTables()
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-            udDao.executeSqlNotQuery(session, mysql_unlock_tables);
+            return udDao.executeSqlNotQuery(session, mysql_unlock_tables);
         }
     }
 
