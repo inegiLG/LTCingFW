@@ -1,5 +1,4 @@
 ﻿using log4net;
-using LTCingFW.opc;
 using Microsoft.Win32;
 using Oracle.ManagedDataAccess.Client;
 using System;
@@ -902,53 +901,51 @@ namespace LTCingFW.utils
             return returnStr;
         }
 
-        public static string GetCommonTypeByPlcType(string plcType)
-        {
+        //public static string GetCommonTypeByPlcType(string plcType)
+        //{
+        //    if (plcType == PLCTypeEnum.BOOL.ToString())
+        //    {
+        //        return OrmDataType.CommonType.BOOL.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.BYTE.ToString())
+        //    {
+        //        return OrmDataType.CommonType.INT.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.CHAR.ToString())
+        //    {
+        //        return OrmDataType.CommonType.INT.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.DATETIME.ToString())
+        //    {
+        //        return OrmDataType.CommonType.DATE.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.DINT.ToString())
+        //    {
+        //        return OrmDataType.CommonType.INT.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.DWORD.ToString())
+        //    {
+        //        return OrmDataType.CommonType.INT.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.INT.ToString())
+        //    {
+        //        return OrmDataType.CommonType.INT.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.REAL.ToString())
+        //    {
+        //        return OrmDataType.CommonType.DECIMAL.ToString();
+        //    }
+        //    else if (plcType == PLCTypeEnum.WORD.ToString())
+        //    {
+        //        return OrmDataType.CommonType.INT.ToString();
+        //    }
+        //    else
+        //    {
+        //        throw new LTCingFWException(String.Format("无法将{0}PlcType转换为CommonType", plcType));
+        //    }
+        //}
 
-            if (plcType == PLCTypeEnum.BOOL.ToString())
-            {
-                return OrmDataType.CommonType.BOOL.ToString();
-            }
-            else if (plcType == PLCTypeEnum.BYTE.ToString())
-            {
-                return OrmDataType.CommonType.INT.ToString();
-            }
-            else if (plcType == PLCTypeEnum.CHAR.ToString())
-            {
-                return OrmDataType.CommonType.INT.ToString();
-            }
-            else if (plcType == PLCTypeEnum.DATETIME.ToString())
-            {
-                return OrmDataType.CommonType.DATE.ToString();
-            }
-            else if (plcType == PLCTypeEnum.DINT.ToString())
-            {
-                return OrmDataType.CommonType.INT.ToString();
-            }
-            else if (plcType == PLCTypeEnum.DWORD.ToString())
-            {
-                return OrmDataType.CommonType.INT.ToString();
-            }
-            else if (plcType == PLCTypeEnum.INT.ToString())
-            {
-                return OrmDataType.CommonType.INT.ToString();
-            }
-            else if (plcType == PLCTypeEnum.REAL.ToString())
-            {
-                return OrmDataType.CommonType.DECIMAL.ToString();
-            }
-            else if (plcType == PLCTypeEnum.WORD.ToString())
-            {
-                return OrmDataType.CommonType.INT.ToString();
-            }
-           
-            else
-            {
-                throw new LTCingFWException(String.Format("无法将{0}PlcType转换为CommonType", plcType));
-            }
-            
-            
-        }
+
         public static object GetCommonTypeValue(object value,string commonType)
         {
             if (commonType == OrmDataType.CommonType.STRING.ToString().ToUpper()) { return Convert.ToString(value); }
