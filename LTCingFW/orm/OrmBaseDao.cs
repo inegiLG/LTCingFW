@@ -1,5 +1,4 @@
 ﻿using log4net;
-using Oracle.ManagedDataAccess.Client;
 using LTCingFW;
 using LTCingFW.utils;
 using System;
@@ -7,11 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using MySql.Data.MySqlClient;
+
 
 namespace LTCingFW
 {
@@ -32,6 +30,10 @@ namespace LTCingFW
                 if (model == null && this is OrmBaseModel)
                 {
                     model = (OrmBaseModel)this;
+                }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
                 }
                 OrmTableAttribute[] attrs = model.GetType().GetCustomAttributes(typeof(OrmTableAttribute), true) as OrmTableAttribute[];
                 foreach (OrmTableAttribute attr in attrs)
@@ -65,6 +67,10 @@ namespace LTCingFW
                 {
                     model = (OrmBaseModel)this;
                 }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
                 StringBuilder sb = new StringBuilder();
                 foreach (OrmColumnBean bean in model.OrmList)
                 {
@@ -97,26 +103,21 @@ namespace LTCingFW
                 {
                     model = (OrmBaseModel)this;
                 }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
                 sqlText.Append("(");
                 foreach (OrmColumnBean bean in model.OrmList)
                 {
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                     string mark = "@";
-                    if (session.Connection is OracleConnection)
+                    if (session.ProviderName == DBSession.Oracle_ProviderName)
                     {
                         mark = ":";
-                        param = new OracleParameter();
                     }
-                    else if (session.Connection is SqlConnection)
-                    {
-                        param = new SqlParameter();
-                    }
-                    else if (session.Connection is MySqlConnection)
-                    {
-                        param = new MySqlParameter();
-                    }
-                    else if (session.DbFactory != null)
+                    if (session.DbFactory != null)
                     {
                         param = session.DbFactory.CreateParameter();
                     }
@@ -156,6 +157,10 @@ namespace LTCingFW
                 {
                     model = (OrmBaseModel)this;
                 }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
                 StringBuilder sb = new StringBuilder();
                 foreach (OrmColumnBean bean in model.OrmList)
                 {
@@ -166,7 +171,7 @@ namespace LTCingFW
                         {
                             continue;
                         }
-                        if (session.Connection is OracleConnection)
+                        if (session.ProviderName == DBSession.Oracle_ProviderName)
                         {
                             sb.Append(" ").Append(attr.ColName).Append('=').Append(':').Append(attr.ColName).Append(",");
                         }
@@ -205,6 +210,10 @@ namespace LTCingFW
                 {
                     model = (OrmBaseModel)this;
                 }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
                 foreach (OrmColumnBean bean in model.OrmList)
                 {
                     DbParameter param = null;
@@ -216,20 +225,11 @@ namespace LTCingFW
                             continue;
                         }
                         string mark = "@";
-                        if (session.Connection is OracleConnection)
+                        if (session.ProviderName == DBSession.Oracle_ProviderName)
                         {
                             mark = ":";
-                            param = new OracleParameter();
                         }
-                        else if (session.Connection is SqlConnection)
-                        {
-                            param = new SqlParameter();
-                        }
-                        else if (session.Connection is MySqlConnection)
-                        {
-                            param = new MySqlParameter();
-                        }
-                        else if (session.DbFactory != null)
+                        if (session.DbFactory != null)
                         {
                             param = session.DbFactory.CreateParameter();
                         }
@@ -427,6 +427,10 @@ namespace LTCingFW
                 {
                     model = (OrmBaseModel)this;
                 }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
                 bool hasPrimaryKey = false;
                 //遍历属性值
                 foreach (OrmColumnBean bean in model.OrmList)
@@ -445,20 +449,11 @@ namespace LTCingFW
                         else
                         {
                             string mark = "@";
-                            if (session.Connection is OracleConnection)
+                            if (session.ProviderName == DBSession.Oracle_ProviderName)
                             {
-                                param = new OracleParameter();
                                 mark = ":";
                             }
-                            else if (session.Connection is SqlConnection)
-                            {
-                                param = new SqlParameter();
-                            }
-                            else if (session.Connection is MySqlConnection)
-                            {
-                                param = new MySqlParameter();
-                            }
-                            else if (session.DbFactory != null)
+                            if (session.DbFactory != null)
                             {
                                 param = session.DbFactory.CreateParameter();
                             }
@@ -520,6 +515,10 @@ namespace LTCingFW
                 {
                     model = (OrmBaseModel)this;
                 }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
                 int max_limit = model.UpLimitNumber;
                 int min_limit = model.LowLimitNumber;
                 String allColumnString = GetAllColumnNameStr(session, model);
@@ -541,9 +540,8 @@ namespace LTCingFW
                 }
 
                 //oracle
-                if (session.Connection is OracleConnection)
+                if (session.ProviderName == DBSession.Oracle_ProviderName)
                 {
-
                     sql = sql + " ORDER BY " + orderby;
                     sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
                     sb.Append(" ( SELECT ").Append(" ROWNUM RN , ").Append(allColumnString);
@@ -552,7 +550,7 @@ namespace LTCingFW
 
                 }
                 //sqlserver
-                if (session.Connection is SqlConnection)
+                if (session.ProviderName == DBSession.SqlServer_ProviderName)
                 {
                     sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
                     sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER( ORDER BY ").Append(orderby).Append(" ) RN, ");
@@ -562,7 +560,7 @@ namespace LTCingFW
 
                 }
                 //mysql
-                if (session.Connection is MySqlConnection)
+                if (session.ProviderName == DBSession.MySql_ProviderName)
                 {
                     sql = sql + " ORDER BY " + orderby;
                     sb.Append(sql).Append(" LIMIT ").Append(min_limit - 1).Append(",").Append(model.PageItemCount);
@@ -603,6 +601,10 @@ namespace LTCingFW
             if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
             }
             StringBuilder sql = new StringBuilder();
             sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
@@ -646,6 +648,10 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbConnection conn = session.Connection;
             List<DbParameter> ValueList = new List<DbParameter>();
             StringBuilder sqlText = new StringBuilder();
@@ -678,7 +684,7 @@ namespace LTCingFW
             //    }
             //}
             #endregion
-            return Select(conn, session.Transaction, pageSql, ValueList.ToArray());
+            return Select( session, pageSql, ValueList.ToArray());
         }
 
         /// <summary>
@@ -708,6 +714,10 @@ namespace LTCingFW
             if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
             }
             DataTable res = SelectPage(session, model);
             List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
@@ -743,6 +753,10 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbConnection conn = session.Connection;
             List<DbParameter> ValueList = new List<DbParameter>();
             StringBuilder sqlText = new StringBuilder();
@@ -775,13 +789,13 @@ namespace LTCingFW
                 }
                 else
                 {
-                    DataTable table = Select(conn, session.Transaction, sqlText.ToString(), ValueList.ToArray()).Copy();
+                    DataTable table = Select( session, sqlText.ToString(), ValueList.ToArray()).Copy();
                     CacheFactory.SetTableCache(sqlText.ToString(), table);
                     return table;
                 }
             }
             #endregion
-            return Select(conn, session.Transaction, sqlText.ToString(), ValueList.ToArray());
+            return Select( session, sqlText.ToString(), ValueList.ToArray());
         }
 
         /// <summary>
@@ -811,6 +825,10 @@ namespace LTCingFW
             if (model == null && this is OrmBaseModel)
             {
                 model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
             }
             DataTable res = Select(session, model);
             List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
@@ -847,6 +865,10 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbConnection conn = session.Connection;
             List<DbParameter> ValueList = new List<DbParameter>();
             StringBuilder sqlText = new StringBuilder();
@@ -865,7 +887,7 @@ namespace LTCingFW
             {
                 sqlText.Append(" ORDER BY ").Append(model.OrderBy);
             }
-            return Select(conn, session.Transaction, sqlText.ToString(), ValueList.ToArray());
+            return Select( session, sqlText.ToString(), ValueList.ToArray());
         }
 
         /// <summary>
@@ -896,6 +918,10 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DataTable res = SelectByPrimaryKey(session, model);
             List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
             foreach (T resModel in resT)
@@ -915,6 +941,10 @@ namespace LTCingFW
             if (resModel == null && resModel is OrmBaseModel)
             {
                 resModel = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
             }
             PropertyInfo[] infos = resModel.GetType().GetProperties();
             foreach (PropertyInfo info in infos)
@@ -992,13 +1022,13 @@ namespace LTCingFW
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public DataTable Select(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
+        public DataTable Select(DBSession session, String sql, DbParameter[] parameters)
         {
             logger.Debug(sql);
-            DbDataAdapter adapter = DBSession.GetDataAdapter(conn, sql);
-            if (dbTransaction != null)
+            DbDataAdapter adapter = DBSession.GetDataAdapter(session, sql);
+            if (session.Transaction != null)
             {
-                adapter.SelectCommand.Transaction = dbTransaction;
+                adapter.SelectCommand.Transaction = session.Transaction;
             }
             adapter.SelectCommand.Parameters.AddRange(parameters);
             DataTable resultTable = new DataTable();
@@ -1032,8 +1062,11 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbConnection conn = session.Connection;
-            String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();
             sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ");
             List<DbParameter> ValueList = new List<DbParameter>();
@@ -1046,7 +1079,7 @@ namespace LTCingFW
                 CacheFactory.RemoveAllTableCache(GetTableName(session, model));
             }
             //执行
-            return Insert(conn, session.Transaction, sqlText.ToString(), ValueList.ToArray());
+            return Insert( session, sqlText.ToString(), ValueList.ToArray());
         }
 
         /// <summary>
@@ -1057,9 +1090,9 @@ namespace LTCingFW
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public int Insert(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
+        public int Insert(DBSession session, String sql, DbParameter[] parameters)
         {
-            return executeSqlNotQuery(conn, dbTransaction, sql, parameters);
+            return executeSqlNotQuery(session.Connection, session.Transaction, sql, parameters);
         }
 
         /// <summary>
@@ -1111,8 +1144,11 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbConnection conn = session.Connection;
-            String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();
             sqlText.Append(" DELETE FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
             List<DbParameter> ValueList = new List<DbParameter>();
@@ -1184,8 +1220,11 @@ namespace LTCingFW
             {
                 model = (OrmBaseModel)this;
             }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbConnection conn = session.Connection;
-            String dbType = FwUtilFunc.GetDBTypeByConnection(conn);
             StringBuilder sqlText = new StringBuilder();
             sqlText.Append(" UPDATE ").Append(GetTableName(session, model)).Append(" SET ").Append(GetUpdateSetColumnStr(session, model));
             List<DbParameter> ValueList = new List<DbParameter>();
@@ -1197,7 +1236,7 @@ namespace LTCingFW
             {
                 CacheFactory.RemoveAllTableCache(GetTableName(session, model));
             }
-            return Update(conn, session.Transaction, sqlText.ToString(), ValueList.ToArray());
+            return Update(session, sqlText.ToString(), ValueList.ToArray());
         }
         /// <summary>
         /// 自定义修改
@@ -1207,9 +1246,9 @@ namespace LTCingFW
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public int Update(DbConnection conn, DbTransaction dbTransaction, String sql, DbParameter[] parameters)
+        public int Update(DBSession session, String sql, DbParameter[] parameters)
         {
-            return executeSqlNotQuery(conn, dbTransaction, sql, parameters);
+            return executeSqlNotQuery(session.Connection, session.Transaction, sql, parameters);
         }
 
         /// <summary>
@@ -1239,6 +1278,10 @@ namespace LTCingFW
         public int executeSqlNotQuery(DBSession session, String sql)
         {
             logger.Debug(sql);
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
             DbCommand cmd = session.Connection.CreateCommand();
             if (session.Transaction != null)
             {
@@ -1257,7 +1300,11 @@ namespace LTCingFW
         public DataTable executeSqlQuery(DBSession session, string sql)
         {
             logger.Debug(sql);
-            DbDataAdapter adapter = DBSession.GetDataAdapter(session.Connection, sql);
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DbDataAdapter adapter = DBSession.GetDataAdapter(session, sql);
             DbCommand cmd = session.Connection.CreateCommand();
             if (session.Transaction != null)
             {

@@ -1,12 +1,11 @@
 ﻿using log4net;
 using LTCingFW.utils;
-using MySql.Data.MySqlClient;
-using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +14,10 @@ namespace LTCingFW
     public class DBSession
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(DBSession));
+
+        public const string Oracle_ProviderName = "Oracle.ManagedDataAccess.Client";
+        public const string MySql_ProviderName = "MySql.Data.MySqlClient";
+        public const string SqlServer_ProviderName = "System.Data.SqlClient";
 
         public String DbAlias { get; set; }
 
@@ -25,6 +28,8 @@ namespace LTCingFW
         public DbTransaction Transaction { set; get; }
 
         public DbProviderFactory DbFactory { get; set; }
+
+        public string ProviderName { get; set; }
 
         private DBSession() { }
         public static DBSession OpenSession(String dbAlias,bool OpenTransaction)
@@ -109,119 +114,41 @@ namespace LTCingFW
         private void GetConnection(string dbAlias)
         {
             DB_Leaf node = LTCingFWSet.dbDic[dbAlias];
-            String dbtype = node.DbType.Trim().ToLower();
+            //String dbtype = node.DbType.Trim().ToLower();
             this.DbAlias = dbAlias;
 
             if (FwUtilFunc.StringIsNotEmpty(node.ProviderName)) {
                 this.DbFactory = DbProviderFactories.GetFactory(node.ProviderName);
                 this.Connection = DbFactory.CreateConnection();
+                this.ProviderName = node.ProviderName;
                 if (FwUtilFunc.StringIsNotEmpty(node.ConnectionString))
                 {
                     this.Connection.ConnectionString = node.ConnectionString;
                     return;
                 }
             }
-            if (dbtype == "oracle")
-            {
-                OracleConnectionStringBuilder info = new OracleConnectionStringBuilder();
-                if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
-                {
-                    info.ConnectionString = node.ConnectionString.Trim();
-                }
-                else
-                {
-                    info.DataSource = node.DataSource.Trim();
-                    info.UserID = node.UserID.Trim();
-                    info.Password = node.Password.Trim();
-                    info.ConnectionTimeout = int.Parse(node.ConnectionTimeout.Trim());
-                    info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                    info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
-                    info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
-                    info.IncrPoolSize = int.Parse(node.IncrPoolSize.Trim());
-                    info.DecrPoolSize = int.Parse(node.DecrPoolSize.Trim());
-                }
-                this.Connection = new OracleConnection();
-                this.Connection.ConnectionString = info.ConnectionString;
-            }
-            else if (dbtype == "sqlserver")
-            {
-                SqlConnectionStringBuilder info = new SqlConnectionStringBuilder();
-                if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
-                {
-                    info.ConnectionString = node.ConnectionString.Trim();
-                }
-                else
-                {
-                    info.DataSource = node.DataSource.Trim();
-                    if (node.InitialCatalog.Trim() != "")
-                    {
-                        info.InitialCatalog = node.InitialCatalog.Trim();
-                    }
-                    info.UserID = node.UserID.Trim();
-                    info.Password = node.Password.Trim();
-                    info.ConnectTimeout = int.Parse(node.ConnectionTimeout.Trim());
-                    info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                    info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
-                    info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
-                }
-                this.Connection = new SqlConnection();
-                this.Connection.ConnectionString = info.ConnectionString;
-            }
-            else if (dbtype == "mysql")
-            {
 
-                MySqlConnectionStringBuilder info = new MySqlConnectionStringBuilder();
-                if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
-                {
-                    info.ConnectionString = node.ConnectionString.Trim();
-                }
-                else
-                {
-                    info.Server = node.DataSource.Trim();
-                    info.Database = node.Database.Trim();
-                    info.UserID = node.UserID.Trim();
-                    info.Password = node.Password.Trim();
-                    info.ConnectionTimeout = uint.Parse(node.ConnectionTimeout.Trim());
-                    info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                    info.MaximumPoolSize = uint.Parse(node.MaxPoolSize.Trim());
-                    info.MinimumPoolSize = uint.Parse(node.MinPoolSize.Trim());
-                }
-                this.Connection = new MySqlConnection();
-                this.Connection.ConnectionString = info.ConnectionString;
-            }
-            else
-            {
-                throw new LTCingFWException(dbtype + "为不支持的数据库类型。");
-            }
         }
 
-        /// <summary>
-        /// 获取Oracle或者SqlServer的数据适配器
-        /// </summary>
-        /// <param name="conn">连接</param>
-        /// <param name="sql">sql语句</param>
-        /// <returns>DbDataAdapter</returns>
-        public static DbDataAdapter GetDataAdapter(DbConnection conn, String sql)
+        public static DbDataAdapter GetDataAdapter(DBSession session, String sql)
         {
-            if (conn is OracleConnection)
+            DbDataAdapter adapter = session.DbFactory.CreateDataAdapter();
+            if (adapter == null)
             {
-                OracleDataAdapter adapter = new OracleDataAdapter(sql, (OracleConnection)conn);
-                return adapter;
+                Assembly assem = session.DbFactory.GetType().Assembly;
+                foreach (Type t in assem.GetTypes())
+                {
+                    if (t.BaseType == typeof(DbDataAdapter))
+                    {
+                        adapter = assem.CreateInstance(session.ProviderName+"."+t.Name) as DbDataAdapter;
+                        break;
+                    }
+                }
             }
-            else if (conn is SqlConnection)
-            {
-                SqlDataAdapter adapter = new SqlDataAdapter(sql, (SqlConnection)conn);
-                return adapter;
-            }
-            else if (conn is MySqlConnection)
-            {
-                MySqlDataAdapter adapter = new MySqlDataAdapter(sql, (MySqlConnection)conn);
-                return adapter;
-            }
-            else
-            {
-                throw new LTCingFWException("不支持的数据适配器，不支持该数据库类型！");
-            }
+            DbCommand cmd = session.Connection.CreateCommand();
+            cmd.CommandText = sql;
+            adapter.SelectCommand = cmd;
+            return adapter;
         }
 
     }

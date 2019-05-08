@@ -1,6 +1,5 @@
 ﻿using log4net;
 using Microsoft.Win32;
-using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -73,23 +72,6 @@ namespace LTCingFW.utils
 
 
 
-        /// <summary>
-        /// 通过Connection获取DB类型
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <returns></returns>
-        public static String GetDBTypeByConnection(DbConnection conn) {
-            //oracle
-            if (conn is OracleConnection) {
-                return DB_Leaf.OracleDBType;
-            }
-            //sqlserver
-            if (conn is SqlConnection) {
-                return DB_Leaf.SqlServerDBType;
-            }
-            //mysql未实现
-            return null;
-        }
         /// <summary>
         /// 获取OrmModel的属性值
         /// </summary>
@@ -967,7 +949,15 @@ namespace LTCingFW.utils
             else { throw new LTCingFWException(commonType + "不是六种类型之一！"); }
         }
 
-
+        public static object CreateInstanceByClassFullName(Assembly assembly,string classFullName)
+        {
+            Type t = assembly.GetType(classFullName);
+            if (t!=null)
+            {
+                return assembly.CreateInstance(classFullName);
+            }
+            return null;
+        }
 
     }
 }

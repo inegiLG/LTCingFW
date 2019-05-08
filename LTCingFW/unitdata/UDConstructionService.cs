@@ -1,5 +1,4 @@
 ﻿using log4net;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -107,7 +106,7 @@ namespace LTCingFW.unitdata
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
 
             ValueInfoOrmModel model = null;
-            if (session.Connection is MySqlConnection)
+            if (session.ProviderName == DBSession.MySql_ProviderName)
             {
                 model = new ValueInfoOrmModel();
             }

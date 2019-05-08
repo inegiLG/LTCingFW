@@ -12,9 +12,9 @@ using System.IO;
 using LTCingFW.utils;
 using System.Threading;
 using System.Data.Common;
-using Oracle.ManagedDataAccess.Client;
-using System.Data.SqlClient;
-using MySql.Data.MySqlClient;
+
+
+
 
 namespace LTCingFW
 {
@@ -146,10 +146,9 @@ namespace LTCingFW
             {
                 Type[] entryTypes = Assembly.GetEntryAssembly().GetTypes();//入口程序集
                 Type[] fwTypes = Assembly.GetExecutingAssembly().GetTypes();//框架程序集
-                Type[] allTypes = entryTypes.Concat(fwTypes).ToArray();
-                foreach (Type type in allTypes)
+                //Type[] allTypes = entryTypes.Concat(fwTypes).ToArray();
+                foreach (Type type in entryTypes)
                 {
-
                     IEnumerable<Attribute> attributes = type.GetCustomAttributes(typeof(BaseInstanceAttribute));
                     foreach (System.Attribute a in attributes)
                     {
@@ -158,18 +157,40 @@ namespace LTCingFW
                         {
                             BaseInstanceAttribute attr = a as BaseInstanceAttribute;
                             if (FwUtilFunc.StringIsNotEmpty(attr.Name)) {
-                                LTCingFWSet.Beans.Add(new FwInstanceBean(attr.Name, type.FullName));
+                                LTCingFWSet.Beans.Add(new FwInstanceBean(attr.Name, type.FullName, Assembly.GetEntryAssembly()));
                                 logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}]", type.FullName, attr.Name));
                             }
                             else if(!LTCingFWSet.Instance.ContainsKey(type.Name))
                             {
-                                LTCingFWSet.Beans.Add(new FwInstanceBean(type.Name, type.FullName));
+                                LTCingFWSet.Beans.Add(new FwInstanceBean(type.Name, type.FullName, Assembly.GetEntryAssembly()));
                                 logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}]", type.FullName, type.Name));
                             }
 
                         }
                     }
+                }
+                foreach (Type type in fwTypes)
+                {
+                    IEnumerable<Attribute> attributes = type.GetCustomAttributes(typeof(BaseInstanceAttribute));
+                    foreach (System.Attribute a in attributes)
+                    {
+                        //如果是实例（含有BaseInstanceAttribute），创建实例并加入到FrameWorkSet
+                        if (a is BaseInstanceAttribute)
+                        {
+                            BaseInstanceAttribute attr = a as BaseInstanceAttribute;
+                            if (FwUtilFunc.StringIsNotEmpty(attr.Name))
+                            {
+                                LTCingFWSet.Beans.Add(new FwInstanceBean(attr.Name, type.FullName, Assembly.GetExecutingAssembly()));
+                                logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}]", type.FullName, attr.Name));
+                            }
+                            else if (!LTCingFWSet.Instance.ContainsKey(type.Name))
+                            {
+                                LTCingFWSet.Beans.Add(new FwInstanceBean(type.Name, type.FullName, Assembly.GetExecutingAssembly()));
+                                logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}]", type.FullName, type.Name));
+                            }
 
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -177,7 +198,50 @@ namespace LTCingFW
                 throw new LTCingFWException("查找特性实例出错", e);
             }
         }
+        /// <summary>
+        /// 创建所有配置文件类
+        /// </summary>
+        private static void lookForConfigInstance_()
+        {
+            try
+            {
+                String bean_name;
+                String bean_type;
+                foreach (Bean_Leaf bean in LTCingFWSet.XmlConfigs.BeanBranch.BeanLeafs)
+                {
+                    bean_name = bean.Name;
+                    bean_type = bean.Type;
+                    Assembly[] AllAssembly = AppDomain.CurrentDomain.GetAssemblies();
+                    if (LTCingFWSet.Instance.ContainsKey(bean_name))
+                    {
 
+                    }
+                    else
+                    {
+                        bool findFlg = false;
+                        foreach (Assembly assem in AllAssembly)
+                        {
+                            if (assem.GetType(bean_type) != null)
+                            {
+                                LTCingFWSet.Beans.Add(new FwInstanceBean(bean_name, bean_type, assem));
+                                logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}] from config file", bean_type, bean_name));
+                                findFlg = true;
+                                break;
+                            }
+                        }
+                        if (!findFlg)
+                        {
+                            throw new Exception("framework can not create bean instance of type[" + bean_type + "] from  config file.");
+                        }
+
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw new LTCingFWException("查找配置文件标注实例出错！", e);
+            }
+        }
         /// <summary>
         /// 依赖注入，为实例的字段自动添加依赖
         /// </summary>
@@ -263,39 +327,7 @@ namespace LTCingFW
         }
 
 
-        /// <summary>
-        /// 创建所有配置文件类
-        /// </summary>
-        private static void lookForConfigInstance_()
-        {
-            try
-            {
-                String bean_name;
-                String bean_type;
-                foreach (Bean_Leaf bean in LTCingFWSet.XmlConfigs.BeanBranch.BeanLeafs)
-                {
-                    bean_name = bean.Name;
-                    bean_type = bean.Type;
-                    if (LTCingFWSet.Instance.ContainsKey(bean_name))
-                    {
 
-                    }
-                    else if (Assembly.GetEntryAssembly().GetType(bean_type) != null)
-                    {
-                        LTCingFWSet.Beans.Add(new FwInstanceBean(bean_name, bean_type));
-                        logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}] from config file", bean_type, bean_name));
-                    }
-                    else
-                    {
-                        throw new Exception("framework can not create bean instance of type[" + bean_type + "] from  config file.");
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                throw new LTCingFWException( "查找配置文件标注实例出错！", e);
-            }
-        }
 
 
         //}
