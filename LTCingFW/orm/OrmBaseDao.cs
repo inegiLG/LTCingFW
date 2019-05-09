@@ -86,7 +86,43 @@ namespace LTCingFW
             }
 
         }
+        /// <summary>
+        /// 获取查询时所有的列名的SQL字符串
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private String GetInsertAllColumnNameStr(DBSession session, OrmBaseModel model)
+        {
+            try
+            {
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
+                StringBuilder sb = new StringBuilder();
+                foreach (OrmColumnBean bean in model.OrmList)
+                {
+                    OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                    if (attr.PrimaryKey && bean.Value == null)
+                    {
+                        continue;
+                    }
+                    sb.Append(attr.ColName).Append(',');
+                }
+                sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new LTCingFWException("获取所有列名错误！", e);
+            }
 
+        }
 
         /// <summary>
         /// 获取插入的值SQL和ValueList
@@ -112,6 +148,10 @@ namespace LTCingFW
                 {
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
+                    if (attr.PrimaryKey && bean.Value == null)
+                    {
+                        continue;
+                    }
                     string mark = "@";
                     if (session.ProviderName == DBSession.Oracle_ProviderName)
                     {
@@ -1041,13 +1081,13 @@ namespace LTCingFW
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public int Insert(DBSession session)
+        public int Insert()
         {
             if (!(this is OrmBaseModel))
             {
                 throw new LTCingFWException("此方法仅供OrmModel使用！");
             }
-            return Insert(session, null);
+            return Insert(null, null);
         }
 
         /// <summary>
@@ -1068,7 +1108,7 @@ namespace LTCingFW
             }
             DbConnection conn = session.Connection;
             StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ");
+            sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetInsertAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ");
             List<DbParameter> ValueList = new List<DbParameter>();
 
             GetInsertColumnValues(session, model, ValueList, sqlText);
