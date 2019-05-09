@@ -106,15 +106,9 @@
     <Content Include="LTCingFW.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="MySql.Data.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="OPCDAAuto.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Oracle.ManagedDataAccess.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="MySql.Data.dll" />
+    <Content Include="OPCDAAuto.dll" />
+    <Content Include="Oracle.ManagedDataAccess.dll" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="viewmodel\BaseForm.resx">
