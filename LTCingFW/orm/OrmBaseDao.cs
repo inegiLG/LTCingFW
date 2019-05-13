@@ -396,13 +396,17 @@ namespace LTCingFW
                             }
                             else if(value is string)
                             {
-                                if (value as string == "0")
+                                if (Convert.ToString(value).Trim() == "0" || Convert.ToString(value).Trim().ToUpper() == "FALSE")
                                 {
                                     res = false;
                                 }
-                                else
+                                else if (Convert.ToString(value).Trim() == "1" || Convert.ToString(value).Trim().ToUpper() == "TRUE")
                                 {
                                     res = true;
+                                }
+                                else
+                                {
+                                    throw new LTCingFWException("非法的BOOL类型，请使用0/1/false/true!");
                                 }
                             }
                             else
