@@ -111,6 +111,17 @@ namespace LTCingFW
             DataTable dt_data = (DataTable)info.Invoke(kepc,null);
             Model.TablePage.Rows.Clear();
             FwUtilFunc.TransferDataTable(dt_data, Model.TablePage);
+            foreach (DataRow row in Model.TablePage.Rows)
+            {
+                if (row["EXCUTE_RESULT"].ToString() == "0")
+                {
+                    row["EXCUTE_RESULT"] = "成功";
+                }
+                else
+                {
+                    row["EXCUTE_RESULT"] = "失败";
+                }
+            }
         }
         #endregion
 

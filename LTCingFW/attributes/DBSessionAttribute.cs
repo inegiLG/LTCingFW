@@ -33,6 +33,7 @@ namespace LTCingFW
                 openTransaction = value;
             }
         }
+        public DBSessionAttribute() { }
         public DBSessionAttribute(string DbAlias) {
             dbAlias = DbAlias;
         }

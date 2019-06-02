@@ -275,7 +275,7 @@ namespace LTCingFW
                     sb.Append(" }\n catch (Exception ex) { \n ");
                     //sb.Append(" logger.Warn(\"Proxy_InnerException:\"+ex.Message+ex.StackTrace);\n");
                     sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); \n}\n");
-                    sb.Append(" throw ex; \n");
+                    sb.Append("  throw new LTCingFWException(ex.TargetSite.ToString()+ex.StackTrace); \n");
                     sb.Append(" }\n ");
                     sb.Append(" finally \n { \n if(!outerSession)\n{\n if(session != null) \n{ \n session.Close(); \n}\n ");
                     sb.Append(" if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");

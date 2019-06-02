@@ -657,6 +657,10 @@ namespace LTCingFW
             DbCommand cmd = session.Connection.CreateCommand();
             if (FwUtilFunc.StringIsNotEmpty(model.Where))
             {
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sql.Append(" AND ");
+                }
                 sql.Append(model.Where);
             }
             cmd.CommandText = sql.ToString();
@@ -708,7 +712,11 @@ namespace LTCingFW
             SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
             if (FwUtilFunc.StringIsNotEmpty(model.Where))
             {
-                sqlText.Append(" AND ").Append(model.Where);
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
             }
 
             String pageSql = addPaginationSql(sqlText.ToString(), session, model);
@@ -817,7 +825,11 @@ namespace LTCingFW
             SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
             if (FwUtilFunc.StringIsNotEmpty(model.Where))
             {
-                sqlText.Append(" AND ").Append(model.Where);
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
             }
             if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
             {
@@ -925,7 +937,11 @@ namespace LTCingFW
             SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, true);
             if (FwUtilFunc.StringIsNotEmpty(model.Where))
             {
-                sqlText.Append(" AND ").Append(model.Where);
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
             }
             if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
             {
@@ -1197,6 +1213,14 @@ namespace LTCingFW
             sqlText.Append(" DELETE FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
             List<DbParameter> ValueList = new List<DbParameter>();
             SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
+            if (FwUtilFunc.StringIsNotEmpty(model.Where))
+            {
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
+            }
             //清除缓存
             if (CacheFactory.IsCached(session, model))
             {

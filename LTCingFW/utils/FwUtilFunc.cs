@@ -24,7 +24,7 @@ namespace LTCingFW.utils
 {
     public static class FwUtilFunc
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(LTCingFWApp));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(FwUtilFunc));
         /// <summary>
         /// 字符串不为空
         /// </summary>
@@ -152,7 +152,7 @@ namespace LTCingFW.utils
                         String colName = data_from.Columns[j].ColumnName;
                         if (!data_to.Columns.Contains(colName))
                         {
-                            logger.Warn("接收端DataTable[" + data_to.TableName + "]中不包含列" + colName);
+                            logger.Info("接收端DataTable[" + data_to.TableName + "]中不包含列[" + colName+"]");
                         }
                         else
                         {
@@ -241,6 +241,38 @@ namespace LTCingFW.utils
 
         }
 
+        /// <summary>
+        /// 为下拉菜单添加数据
+        /// </summary>
+        /// <param name="tb_combo_box">ComboBox</param>
+        /// <param name="controllerName">Controller名</param>
+        /// <param name="methodName">Controller里的方法名</param>
+        /// <param name="displayName">ComboBox的displayName</param>
+        /// <param name="valueName">ComboBox的valueName</param>
+        public static void AddComboBoxDropDownDataSource(ComboBox tb_combo_box, string controllerName, string methodName, string displayName, string valueName)
+        {
+            object controller = LTCingFWSet.GetInstanceBean(controllerName);
+            MethodInfo info = controller.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance);
+            DataTable dropDownDataSource = (DataTable)info.Invoke(controller, null);
+            DataRow row = dropDownDataSource.NewRow();
+            row[displayName] = "";
+            row[valueName] = "";
+            dropDownDataSource.Rows.InsertAt(row, 0);
+            //Distinct
+            DataView dataView = dropDownDataSource.DefaultView;
+            DataTable dataTableDistinct = null;
+            if (displayName == valueName)
+            {
+                dataTableDistinct = dataView.ToTable(true, displayName);
+            }
+            else
+            {
+                dataTableDistinct = dataView.ToTable(true, displayName, valueName);//注：其中ToTable（）的第一个参数为是否DISTINCT
+            }
+            tb_combo_box.DataSource = dataTableDistinct;
+            tb_combo_box.DisplayMember = displayName;
+            tb_combo_box.ValueMember = valueName;
+        }
 
         /// <summary>
         /// 将DataTable的数据导入成为某OrmModel的集合
