@@ -32,23 +32,52 @@ namespace LTCingFW
         public string ProviderName { get; set; }
 
         private DBSession() { }
-        public static DBSession OpenSession(String dbAlias,bool OpenTransaction)
+
+        /// <summary>
+        /// 开始Session
+        /// </summary>
+        /// <param name="dbAlias">连接名</param>
+        /// <param name="OpenTransaction">是否开启事务</param>
+        /// <returns></returns>
+        public static DBSession OpenSession(String dbAlias, bool OpenTransaction)
         {
             try
             {
                 DBSession session = new DBSession();
                 session.GetConnection(dbAlias);
                 session.Connection.Open();
-                if (OpenTransaction) {
+                if (OpenTransaction)
+                {
                     session.BeginTransaction();
                 }
+                logger.Debug(dbAlias + "创建新的DBSession！");
                 return session;
             }
             catch (Exception e)
             {
-                throw new LTCingFWException("创建DBSession错误："+e.Message);
+                throw new LTCingFWException("创建DBSession[" + dbAlias + "]错误：" + e.Message);
             }
-            
+        }
+
+        /// <summary>
+        /// 结束Session
+        /// </summary>
+        public void Close()
+        {
+            try
+            {
+                Commit();
+                if (Connection != null)
+                {
+                    Connection.Close();
+                    Connection = null;
+                }
+                logger.Debug(DbAlias + "DBSession结束！");
+            }
+            catch (Exception e)
+            {
+                throw new LTCingFWException("关闭DBSession[" + DbAlias + "]错误：" + e.Message + e.StackTrace);
+            }
         }
 
         public void BeginTransaction()
@@ -64,9 +93,9 @@ namespace LTCingFW
             Transaction = Connection.BeginTransaction();
         }
 
-        public void EndTransaction()
+
+        public void Commit()
         {
-            
             if (Transaction != null)
             {
                 Transaction.Commit();
@@ -75,41 +104,15 @@ namespace LTCingFW
             }
         }
 
-        public void Close()
-        {
-            try
-            {
-                EndTransaction();
-                if (Connection != null)
-                {
-                    Connection.Close();
-                    Connection = null;
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Warn(e.Message+e.StackTrace);
-            }
-            
-
-        }
-
-        public void Commit()
-        {
-            if (Transaction != null)
-            {
-                Transaction.Commit();
-            }
-        }
-
         public void RollBack()
         {
             if (Transaction != null)
             {
                 Transaction.Rollback();
+                Transaction.Dispose();
+                Transaction = null;
             }
         }
-
 
         private void GetConnection(string dbAlias)
         {
@@ -117,7 +120,8 @@ namespace LTCingFW
             //String dbtype = node.DbType.Trim().ToLower();
             this.DbAlias = dbAlias;
 
-            if (FwUtilFunc.StringIsNotEmpty(node.ProviderName)) {
+            if (FwUtilFunc.StringIsNotEmpty(node.ProviderName))
+            {
                 this.DbFactory = DbProviderFactories.GetFactory(node.ProviderName);
                 this.Connection = DbFactory.CreateConnection();
                 this.ProviderName = node.ProviderName;
@@ -140,7 +144,7 @@ namespace LTCingFW
                 {
                     if (t.BaseType == typeof(DbDataAdapter))
                     {
-                        adapter = assem.CreateInstance(session.ProviderName+"."+t.Name) as DbDataAdapter;
+                        adapter = assem.CreateInstance(session.ProviderName + "." + t.Name) as DbDataAdapter;
                         break;
                     }
                 }
