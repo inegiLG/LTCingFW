@@ -170,7 +170,7 @@ namespace LTCingFW
                         param.Size = attr.ColSize;
                     }
                     param.ParameterName = mark + attr.ColName;
-                    param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                    param.Value = getProperDbParameterValue(bean.Value, attr.ColType, attr.ColName);
                     ValueList.Add(param);
                     sqlText.Append(mark).Append(attr.ColName).Append(",");
                 }
@@ -282,7 +282,7 @@ namespace LTCingFW
                             param.Size = attr.ColSize;
                         }
                         param.ParameterName = mark + attr.ColName;
-                        param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                        param.Value = getProperDbParameterValue(bean.Value, attr.ColType, attr.ColName);
                         ValueList.Add(param);
                     }
                 }
@@ -299,7 +299,7 @@ namespace LTCingFW
         /// <param name="value">原值，多为字符</param>
         /// <param name="colType">db数据类型</param>
         /// <returns></returns>
-        private object getProperDbParameterValue(object value, int colType)
+        private object getProperDbParameterValue(object value, int colType, string colName)
         {
             try
             {
@@ -332,7 +332,7 @@ namespace LTCingFW
                     }
                     else
                     {
-                        throw new LTCingFWException(String.Format("不可处理{0}的SqlServer数据类型", colType));
+                        throw new LTCingFWException(String.Format("列{0}不可处理{1}的SqlServer数据类型", colName, colType));
                     }
                 }
                 else if (colType > 100 && colType <= 200)
@@ -352,7 +352,7 @@ namespace LTCingFW
                     }
                     else
                     {
-                        throw new LTCingFWException(String.Format("不可处理{0}的Oracle数据类型", colType));
+                        throw new LTCingFWException(String.Format("列{0}不可处理{1}的Oracle数据类型", colName, colType));
                     }
                 }
                 else if (colType > 200 && colType <= 300)
@@ -372,7 +372,7 @@ namespace LTCingFW
                     }
                     else
                     {
-                        throw new LTCingFWException(String.Format("不可处理{0}的MySql数据类型", colType));
+                        throw new LTCingFWException(String.Format("列{0}不可处理{1}的MySql数据类型", colName, colType));
                     }
                 }
                 else if (colType > 1000 && colType <= 1100)
@@ -406,7 +406,7 @@ namespace LTCingFW
                                 }
                                 else
                                 {
-                                    throw new LTCingFWException("非法的BOOL类型，请使用0/1/false/true!");
+                                    throw new LTCingFWException(colName + "列是非法的BOOL类型，请使用0/1/false/true!");
                                 }
                             }
                             else
@@ -428,7 +428,7 @@ namespace LTCingFW
                             }
                             else
                             {
-                                throw new LTCingFWException("BINARY 类型必须是byte[]类型！");
+                                throw new LTCingFWException(colName + "列BINARY 类型必须是byte[]类型！");
                             }
                             break;
                         default:
@@ -438,12 +438,12 @@ namespace LTCingFW
                 }
                 else
                 {
-                    throw new LTCingFWException(String.Format("没有{0}数据类型", colType));
+                    throw new LTCingFWException(String.Format("列{0}没有{1}数据类型", colName, colType));
                 }
             }
             catch (Exception e)
             {
-                throw new LTCingFWException("参数赋值前根据ColType类型进行数据类型强转时错误！类型[" + colType + "] 值为["+ value.ToString() + "]", e);
+                throw new LTCingFWException(colName+"列参数赋值前根据ColType类型进行数据类型强转时错误！类型[" + colType + "] 值为["+ value.ToString() + "]", e);
             }
 
 
@@ -514,13 +514,13 @@ namespace LTCingFW
                             if (model.FuzzyColumnNames.Contains(bean.ColumnName))
                             {
                                 sqlText.Append(" AND ").Append(attr.ColName).Append(" LIKE ").Append(mark).Append(attr.ColName);
-                                param.Value = "%" + getProperDbParameterValue(bean.Value, attr.ColType) + "%";
+                                param.Value = "%" + getProperDbParameterValue(bean.Value, attr.ColType, attr.ColName) + "%";
                                 ValueList.Add(param);
                             }
                             else
                             {
                                 sqlText.Append(" AND ").Append(attr.ColName).Append(" = ").Append(mark).Append(attr.ColName);
-                                param.Value = getProperDbParameterValue(bean.Value, attr.ColType);
+                                param.Value = getProperDbParameterValue(bean.Value, attr.ColType, attr.ColName);
                                 ValueList.Add(param);
                             }
 
