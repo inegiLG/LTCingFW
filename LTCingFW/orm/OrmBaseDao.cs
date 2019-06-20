@@ -1124,7 +1124,7 @@ namespace LTCingFW
             }
             if (session == null)
             {
-                session = LTCingFWSet.GetThreadContext().DBSession;
+                session = LTCingFWSet.GetThreadContext().DBSession; 
             }
             DbConnection conn = session.Connection;
             StringBuilder sqlText = new StringBuilder();
