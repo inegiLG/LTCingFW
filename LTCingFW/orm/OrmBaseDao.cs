@@ -92,7 +92,7 @@ namespace LTCingFW
         /// <param name="session"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        private String GetInsertAllColumnNameStr(DBSession session, OrmBaseModel model)
+        private String GetInsertAllColumnNameStr(DBSession session, OrmBaseModel model ,bool withoutNullColumn)
         {
             try
             {
@@ -110,6 +110,9 @@ namespace LTCingFW
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                     if (attr.PrimaryKey && bean.Value == null)
                     {
+                        throw new Exception( attr.ColName + " Primary Key is Null" );
+                    }
+                    if (withoutNullColumn && bean.Value == null) {
                         continue;
                     }
                     sb.Append(attr.ColName).Append(',');
@@ -131,7 +134,7 @@ namespace LTCingFW
         /// <param name="model"></param>
         /// <param name="ValueList"></param>
         /// <param name="sqlText"></param>
-        private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText)
+        private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText,bool withoutNullColumn)
         {
             try
             {
@@ -143,13 +146,16 @@ namespace LTCingFW
                 {
                     session = LTCingFWSet.GetThreadContext().DBSession;
                 }
-                sqlText.Append("(");
+                sqlText.Append(" ( ");
                 foreach (OrmColumnBean bean in model.OrmList)
                 {
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                     if (attr.PrimaryKey && bean.Value == null)
                     {
+                        throw new Exception( attr.ColName+" Primary key is Null!") ;
+                    }
+                    if (withoutNullColumn && bean.Value == null) {
                         continue;
                     }
                     string mark = "@";
@@ -1107,16 +1113,19 @@ namespace LTCingFW
             {
                 throw new LTCingFWException("此方法仅供OrmModel使用！");
             }
-            return Insert(null, null);
+            return Insert(null, null,false);
         }
-
+        public int Insert(DBSession session, OrmBaseModel model) {
+            return Insert(session, model, true) ;
+        }
         /// <summary>
         /// 默认插入,全列插入
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="dbTransaction"></param>
+        /// <param name="withoutNullColumn"></param>
         /// <returns></returns>
-        public int Insert(DBSession session, OrmBaseModel model)
+        public int Insert(DBSession session, OrmBaseModel model, bool withoutNullColumn)
         {
             if (model == null && this is OrmBaseModel)
             {
@@ -1128,10 +1137,10 @@ namespace LTCingFW
             }
             DbConnection conn = session.Connection;
             StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetInsertAllColumnNameStr(session, model)).Append(" ) ").Append(" VALUES ");
+            sqlText.Append(" INSERT INTO ").Append(GetTableName(session, model)).Append("(").Append(GetInsertAllColumnNameStr(session, model, withoutNullColumn)).Append(" ) ").Append(" VALUES ");
             List<DbParameter> ValueList = new List<DbParameter>();
 
-            GetInsertColumnValues(session, model, ValueList, sqlText);
+            GetInsertColumnValues(session, model, ValueList, sqlText, withoutNullColumn);
 
             //清除缓存
             if (CacheFactory.IsCached(session, model))
@@ -1277,10 +1286,11 @@ namespace LTCingFW
         }
 
         /// <summary>
-        /// 默认修改,通过主键修改其他列
+        /// 默认修改
         /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="dbTransaction"></param>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <param name="onlyByPk">是否只通过主键修改</param>
         /// <returns></returns>
         public int Update(DBSession session, OrmBaseModel model, bool onlyByPk)
         {
