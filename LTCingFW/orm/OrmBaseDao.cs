@@ -1,5 +1,6 @@
 ﻿using log4net;
 using LTCingFW;
+using LTCingFW.exceptions;
 using LTCingFW.utils;
 using System;
 using System.Collections;
@@ -230,14 +231,14 @@ namespace LTCingFW
                 }
                 if (sb.Length == 0)
                 {
-                    throw new LTCingFWException("非主键列无更新值！");
+                    throw new NoUpdateColumnException();
                 }
                 sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
                 return sb.ToString();
             }
-            catch (Exception e)
+            catch (Exception )
             {
-                throw new LTCingFWException("更新式中获取SET所有列名错误！", e);
+                throw ;
             }
 
         }
@@ -1090,16 +1091,24 @@ namespace LTCingFW
         /// <returns></returns>
         public DataTable Select(DBSession session, String sql, DbParameter[] parameters)
         {
-            logger.Debug(sql);
-            DbDataAdapter adapter = DBSession.GetDataAdapter(session, sql);
-            if (session.Transaction != null)
+            try
             {
-                adapter.SelectCommand.Transaction = session.Transaction;
+                logger.Debug(sql);
+                DbDataAdapter adapter = DBSession.GetDataAdapter(session, sql);
+                if (session.Transaction != null)
+                {
+                    adapter.SelectCommand.Transaction = session.Transaction;
+                }
+                adapter.SelectCommand.Parameters.AddRange(parameters);
+                DataTable resultTable = new DataTable();
+                adapter.Fill(resultTable);
+                return resultTable;
             }
-            adapter.SelectCommand.Parameters.AddRange(parameters);
-            DataTable resultTable = new DataTable();
-            adapter.Fill(resultTable);
-            return resultTable;
+            catch (Exception)
+            {
+                throw;
+            }
+
         }
 
         /// <summary>
@@ -1294,25 +1303,36 @@ namespace LTCingFW
         /// <returns></returns>
         public int Update(DBSession session, OrmBaseModel model, bool onlyByPk)
         {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DbConnection conn = session.Connection;
             StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" UPDATE ").Append(GetTableName(session, model)).Append(" SET ").Append(GetUpdateSetColumnStr(session, model));
             List<DbParameter> ValueList = new List<DbParameter>();
-            GetUpdateSetColumnValues(session, model, ValueList);
-            sqlText.Append(" WHERE 1=1 ");
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
-            //清除缓存
-            if (CacheFactory.IsCached(session, model))
+            try
             {
-                CacheFactory.RemoveAllTableCache(GetTableName(session, model));
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
+                DbConnection conn = session.Connection;
+                sqlText.Append(" UPDATE ").Append(GetTableName(session, model)).Append(" SET ").Append(GetUpdateSetColumnStr(session, model));
+                GetUpdateSetColumnValues(session, model, ValueList);
+                sqlText.Append(" WHERE 1=1 ");
+                SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
+                //清除缓存
+                if (CacheFactory.IsCached(session, model))
+                {
+                    CacheFactory.RemoveAllTableCache(GetTableName(session, model));
+                }
+            }
+            catch (NoUpdateColumnException e) {
+                logger.Info(e.Message);
+                return 0;
+            }
+            catch (Exception)
+            {
+                throw;
             }
             return Update(session, sqlText.ToString(), ValueList.ToArray());
         }

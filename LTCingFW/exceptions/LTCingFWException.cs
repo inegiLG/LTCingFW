@@ -9,7 +9,7 @@ namespace LTCingFW
     public class LTCingFWException : Exception
     {
         /// <summary>
-        /// 山信软件错误信息
+        /// 错误信息
         /// </summary>
         private string _error_msg;
         /// <summary>
@@ -26,6 +26,7 @@ namespace LTCingFW
         public LTCingFWException(String error_msg) : base(error_msg)
         {
         }
+        public LTCingFWException(): base () { }
         /// <summary>
         /// 获取信息
         /// </summary>
