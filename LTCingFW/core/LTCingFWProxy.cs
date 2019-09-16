@@ -274,10 +274,10 @@ namespace LTCingFW
                     #region 方法尾部处理
                     sb.Append(" }\n catch (Exception ex) { \n ");
                     //sb.Append(" logger.Warn(\"Proxy_InnerException:\"+ex.Message+ex.StackTrace);\n");
-                    sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); \n}\n");
-                    sb.Append("  throw new LTCingFWException(\"事务回滚：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
+                    sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); session.Close();\n}\n");
+                    sb.Append("  throw new LTCingFWException(\"事务回滚,：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
                     sb.Append(" }\n ");
-                    sb.Append(" finally \n { \n if(!outerSession)\n{\n if(session != null) \n{ \n session.Close(); \n}\n ");
+                    sb.Append(" finally \n { \n if(!outerSession)\n{\n if(session != null && !session.IsClosed()) \n{ \n session.Close(); \n}\n ");
                     sb.Append(" if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");
                     sb.Append(" LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession = null;\n");
                     //sb.Append(" Console.WriteLine(\"清除线程上下文DBSession\"+Thread.CurrentThread.ManagedThreadId);\n");

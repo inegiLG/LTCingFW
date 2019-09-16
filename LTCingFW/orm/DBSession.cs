@@ -2,6 +2,7 @@
 using LTCingFW.utils;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
@@ -57,6 +58,21 @@ namespace LTCingFW
             {
                 throw new LTCingFWException("创建DBSession[" + dbAlias + "]错误：" + e.Message);
             }
+        }
+
+        /// <summary>
+        /// 判断session是否关闭
+        /// </summary>
+        /// <returns></returns>
+        public Boolean IsClosed()
+        {
+            if (Connection == null) {
+                return true;
+            }
+            if (Connection.State == ConnectionState.Closed) {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
