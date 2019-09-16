@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LTCingFW
 {
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method| AttributeTargets.Class)]
     public class DBSessionAttribute:Attribute
     {
         private string dbAlias;

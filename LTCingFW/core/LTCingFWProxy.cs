@@ -160,8 +160,13 @@ namespace LTCingFW
                     {
                         continue;
                     }
+                    //获取切面
                     FwAopBean aspect = GetMethodAspect(type_full_name, mi);
+                    //获取DBSessionAttribute
                     DBSessionAttribute dbSessionAttr = GetMethodTransactionAttribute(mi);
+                    if (dbSessionAttr == null) {
+                        dbSessionAttr = GetClassTransactionAttribute(type);
+                    }
                     #endregion
 
                     if (mi.Name == "NoticeDataChangedCallBack")
@@ -320,6 +325,10 @@ namespace LTCingFW
 
         private static DBSessionAttribute GetMethodTransactionAttribute(MethodInfo method) {
             DBSessionAttribute attr = method.GetCustomAttribute<DBSessionAttribute>();
+            return attr;
+        }
+        private static DBSessionAttribute GetClassTransactionAttribute(Type type) {
+            DBSessionAttribute attr = type.GetCustomAttribute<DBSessionAttribute>();
             return attr;
         }
 
