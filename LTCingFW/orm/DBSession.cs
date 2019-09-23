@@ -56,7 +56,7 @@ namespace LTCingFW
             }
             catch (Exception e)
             {
-                throw new LTCingFWException("创建DBSession[" + dbAlias + "]错误：" + e.Message);
+                throw new LTCingFWException("数据库连接故障，创建DBSession[" + dbAlias + "]错误：" + e.Message);
             }
         }
 

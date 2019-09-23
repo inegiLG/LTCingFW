@@ -92,6 +92,7 @@ namespace LTCingFW
         /// </summary>
         /// <param name="session"></param>
         /// <param name="model"></param>
+        /// <param name="withoutNullColumn">列不可以设定为null，如果是null则不操作该列</param>
         /// <returns></returns>
         private String GetInsertAllColumnNameStr(DBSession session, OrmBaseModel model ,bool withoutNullColumn)
         {
@@ -109,10 +110,12 @@ namespace LTCingFW
                 foreach (OrmColumnBean bean in model.OrmList)
                 {
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                    if (attr.PrimaryKey && bean.Value == null)
-                    {
-                        throw new Exception( attr.ColName + " Primary Key is Null" );
-                    }
+                    //主键可以为空，因为有可能是自增主键，主键为空判断交给数据库自行判断
+                    //if (attr.PrimaryKey && bean.Value == null)
+                    //{
+                    //    throw new Exception( attr.ColName + " Primary Key is Null" );
+                    //}
+                    //如果是列为空则不操作该列，跳过
                     if (withoutNullColumn && bean.Value == null) {
                         continue;
                     }
@@ -152,10 +155,11 @@ namespace LTCingFW
                 {
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
-                    if (attr.PrimaryKey && bean.Value == null)
-                    {
-                        throw new Exception( attr.ColName+" Primary key is Null!") ;
-                    }
+                    //可能是自增列，主键为空交给数据库判断
+                    //if (attr.PrimaryKey && bean.Value == null)
+                    //{
+                    //    throw new Exception( attr.ColName+" Primary key is Null!") ;
+                    //}
                     if (withoutNullColumn && bean.Value == null) {
                         continue;
                     }
