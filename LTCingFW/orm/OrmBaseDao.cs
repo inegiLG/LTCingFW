@@ -1103,7 +1103,10 @@ namespace LTCingFW
                 {
                     adapter.SelectCommand.Transaction = session.Transaction;
                 }
-                adapter.SelectCommand.Parameters.AddRange(parameters);
+                if (parameters != null)
+                {
+                    adapter.SelectCommand.Parameters.AddRange(parameters);
+                }
                 DataTable resultTable = new DataTable();
                 adapter.Fill(resultTable);
                 return resultTable;
@@ -1366,7 +1369,10 @@ namespace LTCingFW
             {
                 cmd.Transaction = dbTransaction;
             }
-            cmd.Parameters.AddRange(parameters);
+            if (parameters != null)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
             cmd.CommandText = sql;
             int n = cmd.ExecuteNonQuery();
             return n;
