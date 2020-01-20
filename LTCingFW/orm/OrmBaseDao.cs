@@ -14,6 +14,7 @@ using System.Text;
 
 namespace LTCingFW
 {
+    
     public class OrmBaseDao
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(OrmBaseDao));

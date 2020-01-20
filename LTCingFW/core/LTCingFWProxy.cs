@@ -116,6 +116,7 @@ namespace LTCingFW
             }
             catch (Exception ex)
             {
+                logger.Warn(ex.ToString());
                 throw ex;
             }
         }
@@ -146,7 +147,7 @@ namespace LTCingFW
 
                 Type type = bean.BelongAssembly.GetType(type_full_name);
                 
-                MethodInfo[] mtds = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                MethodInfo[] mtds = type.GetMethods(BindingFlags.Public | BindingFlags.Instance );
                 foreach (MethodInfo mi in mtds)
                 {
                     #region 方法筛选
@@ -178,7 +179,7 @@ namespace LTCingFW
                     {
                         OverrideTag = "override";
                     }
-                    sb.Append(String.Format("\n public {0} {1} {2} ( ", OverrideTag, FwUtilFunc.GetRegularReturnType(mi.ReturnType), mi.Name));
+                    sb.Append(String.Format("\n public {0} {1} {2} {3}( ", OverrideTag, FwUtilFunc.GetRegularReturnType(mi.ReturnType), mi.Name, mi.ReturnType.FullName==null? "<T> " : ""));
                     #endregion
 
                     #region 方法内前置内容
@@ -197,7 +198,12 @@ namespace LTCingFW
                     }
                     paramStr.Remove(paramStr.Length - 1, 1);
                     sb.Remove(sb.Length - 1, 1);
-                    sb.Append("){\n");
+                    sb.Append(")");
+                    if (mi.ReturnType.FullName == null)
+                    {
+                        sb.Append(" where T : OrmBaseModel");
+                    }
+                    sb.Append("{\n");
                     sb.Append(" object[] paras = new object[]{ ").Append(objStr).Append("};\n");
                     sb.Append(" bool outerSession = false;\n");
                     sb.Append(" DBSession session = null;\n");
@@ -242,11 +248,17 @@ namespace LTCingFW
                     #region 原方法，中间部分
                     if (mi.ReturnType.FullName != "System.Void")
                     {
-                        sb.Append(" r = ").Append("base.").Append(mi.Name).Append("(").Append(paramStr).Append(");\n");
+                        sb.Append(" r = ").Append("base.").Append(mi.Name);
+                        if (mi.ReturnType.FullName == null)
+                        {
+                            sb.Append("<T> ");
+                        }
+                        sb.Append("(").Append(paramStr).Append(");\n");
                     }
                     else
                     {
-                        sb.Append("base.").Append(mi.Name).Append("(").Append(paramStr).Append(");\n");
+                        sb.Append("base.").Append(mi.Name);
+                        sb.Append("(").Append(paramStr).Append(");\n");
                     }
                     #endregion
 

@@ -111,17 +111,21 @@ namespace LTCingFW
             DataTable dt_data = (DataTable)info.Invoke(kepc,null);
             Model.TablePage.Rows.Clear();
             FwUtilFunc.TransferDataTable(dt_data, Model.TablePage);
-            foreach (DataRow row in Model.TablePage.Rows)
+            if (dt_data != null && dt_data.Columns.Contains("EXCUTE_RESULT") )
             {
-                if (row["EXCUTE_RESULT"].ToString() == "0")
+                foreach (DataRow row in Model.TablePage.Rows)
                 {
-                    row["EXCUTE_RESULT"] = "成功";
-                }
-                else
-                {
-                    row["EXCUTE_RESULT"] = "失败";
+                    if (row["EXCUTE_RESULT"].ToString() == "0")
+                    {
+                        row["EXCUTE_RESULT"] = "成功";
+                    }
+                    else
+                    {
+                        row["EXCUTE_RESULT"] = "失败";
+                    }
                 }
             }
+            
         }
         #endregion
 
@@ -132,5 +136,15 @@ namespace LTCingFW
             return info.GetValue(this);
         }
         #endregion
+
+        public object ExecControllerMethod(String ControllerName ,String MethodName,object[] parms)
+        {
+            object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
+            MethodInfo info = kepc.GetType().GetMethod(MethodName, BindingFlags.Public | BindingFlags.Instance);
+            object dt_data = info.Invoke(kepc, parms);
+            return dt_data;
+        }
+
+
     }
 }

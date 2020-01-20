@@ -111,5 +111,16 @@ namespace LTCingFW
             return XmlDoc.SelectSingleNode(configPath).InnerText.Trim();
         }
 
+        public static void AddDB(string dbAlias, string dbProvider, string dbConnectionStr )
+        {
+            DB_Leaf leaf = new DB_Leaf();
+            leaf.ProviderName = dbProvider;
+            leaf.ConnectionString = dbConnectionStr;
+            if (dbDic.Keys.Contains(dbAlias))
+            {
+                dbDic.Remove(dbAlias);
+            }
+            dbDic.Add(dbAlias, leaf);
+        }
     }
 }

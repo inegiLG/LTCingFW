@@ -4,14 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.CodeDom.Compiler;
-using System.IO;
 using LTCingFW.utils;
-using System.Threading;
-using System.Data.Common;
+
 
 
 
@@ -31,6 +25,7 @@ namespace LTCingFW
                 ReadXmlConfigs();
                 lookForConfigInstance_();
                 lookForAttributeInstance();
+                defaultInstance();
                 lookForConfigAspect_();
                 LTCingFWProxy.createProxyForInstance();
                 injectPropertytoInstance();
@@ -39,7 +34,8 @@ namespace LTCingFW
             catch (Exception e)
             {
                 logger.Warn("LTCingFrameWork Start Failed:" + e.Message + ":\r\n" +e.StackTrace);
-                System.Diagnostics.Process.GetCurrentProcess().Kill();
+                //System.Diagnostics.Process.GetCurrentProcess().Kill();
+                throw e;
             }
         }
 
@@ -57,85 +53,22 @@ namespace LTCingFW
             foreach (DB_Leaf node in LTCingFWSet.XmlConfigs.DbBranch.DbLeafs)
             {
                 String dbAlias = node.DbAlias.Trim();
-                if (!LTCingFWSet.dbDic.Keys.Contains(dbAlias))
+                if (LTCingFWSet.dbDic.Keys.Contains(dbAlias))
                 {
-                    //DbConnectionStringBuilder dbConnectionStringBuilder = null;
-                    //String dbtype = node.DbType.Trim().ToLower();
-
-                    //if (dbtype == "oracle")
-                    //{
-                    //    OracleConnectionStringBuilder info = new OracleConnectionStringBuilder();
-                    //    if (node.ConnectionString!= null && node.ConnectionString.Trim() != "")
-                    //    {
-                    //        info.ConnectionString = node.ConnectionString.Trim();
-                    //    }
-                    //    else
-                    //    {
-                    //        info.DataSource = node.DataSource.Trim();
-                    //        info.UserID = node.UserID.Trim();
-                    //        info.Password = node.Password.Trim();
-                    //        info.ConnectionTimeout = int.Parse(node.ConnectionTimeout.Trim());
-                    //        info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                    //        info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
-                    //        info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
-                    //        info.IncrPoolSize = int.Parse(node.IncrPoolSize.Trim());
-                    //        info.DecrPoolSize = int.Parse(node.DecrPoolSize.Trim());
-                    //    }
-                    //    dbConnectionStringBuilder = info;
-                    //}
-                    //else if (dbtype == "sqlserver")
-                    //{
-                    //    SqlConnectionStringBuilder info = new SqlConnectionStringBuilder();
-                    //    if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
-                    //    {
-                    //        info.ConnectionString = node.ConnectionString.Trim();
-                    //    }
-                    //    else
-                    //    {
-                    //        info.DataSource = node.DataSource.Trim();
-                    //        if (node.InitialCatalog.Trim() != "")
-                    //        {
-                    //            info.InitialCatalog = node.InitialCatalog.Trim();
-                    //        }
-                    //        info.UserID = node.UserID.Trim();
-                    //        info.Password = node.Password.Trim();
-                    //        info.ConnectTimeout = int.Parse(node.ConnectionTimeout.Trim());
-                    //        info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                    //        info.MaxPoolSize = int.Parse(node.MaxPoolSize.Trim());
-                    //        info.MinPoolSize = int.Parse(node.MinPoolSize.Trim());
-                    //    }
-                    //    dbConnectionStringBuilder = info;
-                    //}
-                    //else if (dbtype == "mysql")
-                    //{
-
-                    //    MySqlConnectionStringBuilder info = new MySqlConnectionStringBuilder();
-                    //    if (node.ConnectionString != null && node.ConnectionString.Trim() != "")
-                    //    {
-                    //        info.ConnectionString = node.ConnectionString.Trim();
-                    //    }
-                    //    else
-                    //    {
-                    //        info.Server = node.DataSource.Trim();
-                    //        info.Database = node.Database.Trim();
-                    //        info.UserID = node.UserID.Trim();
-                    //        info.Password = node.Password.Trim();
-                    //        info.ConnectionTimeout = uint.Parse(node.ConnectionTimeout.Trim());
-                    //        info.Pooling = node.Pooling.Trim().ToLower() == "true" ? true : false;
-                    //        info.MaximumPoolSize = uint.Parse(node.MaxPoolSize.Trim());
-                    //        info.MinimumPoolSize = uint.Parse(node.MinPoolSize.Trim());
-                    //    }
-                    //    dbConnectionStringBuilder = info;
-                    //}
-                    //else 
-                    //{
-                    //    throw new LTCingFWException(dbtype+"为不支持的数据库类型。");
-
-                    //}
-                    LTCingFWSet.dbDic.Add(dbAlias, node);
+                    LTCingFWSet.dbDic.Remove(dbAlias);
                 }
+                LTCingFWSet.dbDic.Add(dbAlias, node);
             }
         }
+
+        /// <summary>
+        /// 框架內的类
+        /// </summary>
+        private static void defaultInstance()
+        {
+            LTCingFWSet.Instance.Add("OrmBaseDao", new OrmBaseDao());
+        }
+
 
         /// <summary>
         /// 查找所有程序[特性]类

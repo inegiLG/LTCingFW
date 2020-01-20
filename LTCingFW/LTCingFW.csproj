@@ -90,6 +90,8 @@
     <Compile Include="unitdata\UDConstructionService.cs" />
     <Compile Include="unitdata\ValueInfoOrmModel.cs" />
     <Compile Include="utils\FwUtilFunc.cs" />
+    <Compile Include="utils\HttpUtil.cs" />
+    <Compile Include="utils\RetMsg.cs" />
     <Compile Include="utils\XmlManager.cs" />
     <Compile Include="validation\ValidateAttribute.cs" />
     <Compile Include="validation\ValidateEnum.cs" />
