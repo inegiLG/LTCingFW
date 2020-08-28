@@ -1,4 +1,5 @@
 ﻿using log4net;
+using LTCingFW.beans;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -78,7 +79,7 @@ namespace LTCingFW.utils
         /// <param name="model"></param>
         /// <param name="columnName"></param>
         /// <returns></returns>
-        public static object GetObjectPropertyValue(object model,string propertyName)
+        public static object GetObjectPropertyValue(object model, string propertyName)
         {
             PropertyInfo info = model.GetType().GetProperty(propertyName);
             object value = info.GetValue(model);
@@ -89,28 +90,28 @@ namespace LTCingFW.utils
         /// </summary>
         /// <param name="model"></param>
         /// <param name="propertyName"></param>
-        public static void SetObjectPropertyValue(object model, string propertyName,object value)
+        public static void SetObjectPropertyValue(object model, string propertyName, object value)
         {
-            PropertyInfo info = model.GetType().GetProperty(propertyName, BindingFlags.Instance| BindingFlags.Public);
-            info.SetValue(model,value);
+            PropertyInfo info = model.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+            info.SetValue(model, value);
         }
         /// <summary>
         /// 为OrmBaseModel的所有同名属性赋值
         /// </summary>
         /// <param name="from">源实例</param>
         /// <param name="model">OrmBaseModel实例</param>
-        public static void AutoSetOrmModelProperty(object from ,OrmBaseModel to) {
+        public static void AutoSetOrmModelProperty(object from, OrmBaseModel to) {
 
             PropertyInfo[] infos = to.GetType().GetProperties();
             foreach (PropertyInfo t_info in infos)
             {
                 object[] attrs = t_info.GetCustomAttributes(typeof(OrmColumnAttribute), true);
-                if (attrs.Length == 0 )
+                if (attrs.Length == 0)
                 {
                     if (t_info.Name != "OrderBy") {
                         continue;
                     }
-                    
+
                 }
 
                 PropertyInfo f_info = from.GetType().GetProperty(t_info.Name);
@@ -124,9 +125,9 @@ namespace LTCingFW.utils
                 }
 
             }
-            FieldInfo[] finfos = to.GetType().GetFields(BindingFlags.NonPublic|BindingFlags.Instance);
+            FieldInfo[] finfos = to.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (FieldInfo t_info in finfos) {
-                FieldInfo f_info = from.GetType().GetField(t_info.Name, BindingFlags.NonPublic| BindingFlags.Instance);
+                FieldInfo f_info = from.GetType().GetField(t_info.Name, BindingFlags.NonPublic | BindingFlags.Instance);
                 if (f_info != null)
                 {
                     t_info.SetValue(to, f_info.GetValue(from));
@@ -185,10 +186,10 @@ namespace LTCingFW.utils
                 }
                 catch (System.ArgumentException ex)
                 {
-                    logger.Warn(ex.Message+":"+ex.StackTrace);
+                    logger.Warn(ex.Message + ":" + ex.StackTrace);
                 }
-                
-                
+
+
 
             }
         }
@@ -198,7 +199,7 @@ namespace LTCingFW.utils
         /// </summary>
         /// <param name="from"></param>
         /// <param name="to"></param>
-        public static void TransferDataBetweenObject(object f_obj ,object t_obj) {
+        public static void TransferDataBetweenObject(object f_obj, object t_obj) {
             //全部属性赋值
             PropertyInfo[] f_p_infos = f_obj.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             PropertyInfo[] t_p_infos = t_obj.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -280,7 +281,7 @@ namespace LTCingFW.utils
         /// <typeparam name="MT">OrmModel类型</typeparam>
         /// <param name="table">DataTable结果集</param>
         /// <returns></returns>
-        public  static List<MT> LoadOrmModelListFromDataTable<MT>(DataTable table) {
+        public static List<MT> LoadOrmModelListFromDataTable<MT>(DataTable table) {
             List<MT> modelList = new List<MT>();
             PropertyInfo[] infos = typeof(MT).GetProperties();
 
@@ -380,11 +381,11 @@ namespace LTCingFW.utils
                     modelList.Add(model);
                 }
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
-                throw new LTCingFWException("DataTable->OrmModel出错："+ex.Message+ex.StackTrace);
+                throw new LTCingFWException("DataTable->OrmModel出错：" + ex.Message + ex.StackTrace);
             }
-            
+
 
             return modelList;
         }
@@ -395,7 +396,7 @@ namespace LTCingFW.utils
         /// <param name="table1"></param>
         /// <param name="table2"></param>
         /// <returns></returns>
-        public static bool EqualsForDataTableContext(object table1 , object table2) {
+        public static bool EqualsForDataTableContext(object table1, object table2) {
 
             if (table1 == null && table2 == null)
             {
@@ -412,8 +413,8 @@ namespace LTCingFW.utils
             else {
                 try
                 {
-                    DataTable tb1 = (DataTable)table1 ;
-                    DataTable tb2 = (DataTable)table2 ;
+                    DataTable tb1 = (DataTable)table1;
+                    DataTable tb2 = (DataTable)table2;
                     //1.比较列结构
                     if (tb1.Columns.Count != tb2.Columns.Count)
                     {
@@ -450,7 +451,7 @@ namespace LTCingFW.utils
                 {
                     return false;
                 }
-               
+
             }
             return true;
         }
@@ -498,7 +499,7 @@ namespace LTCingFW.utils
         /// <param name="formName">Form名</param>
         /// <param name="ret"></param>
         public static void CreateValidLabel(string formName, ValidResult ret) {
-            CreateValidLabel((Form)FWAppContainer.getProperty(formName),ret);
+            CreateValidLabel((Form)FWAppContainer.getProperty(formName), ret);
         }
         /// <summary>
         /// 创建验证的ValidLabel
@@ -626,7 +627,7 @@ namespace LTCingFW.utils
         /// <param name="form">页面</param>
         /// <param name="name">控件名</param>
         /// <returns></returns>
-        public static object GetControlByName(Form form ,String name)
+        public static object GetControlByName(Form form, String name)
         {
             FieldInfo info = form.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
             return info.GetValue(form);
@@ -654,7 +655,7 @@ namespace LTCingFW.utils
             }
             if (selectedControl == null)
             {
-                
+
                 if (panel == null)
                 {
                     return null;
@@ -749,7 +750,7 @@ namespace LTCingFW.utils
         {
             if ((MySqlDbType)typeInt == MySqlDbType.DATE || (MySqlDbType)typeInt == MySqlDbType.DATETIME
                 || (MySqlDbType)typeInt == MySqlDbType.TIMESTAMP || (MySqlDbType)typeInt == MySqlDbType.TIME
-                || (MySqlDbType)typeInt == MySqlDbType.YEAR )
+                || (MySqlDbType)typeInt == MySqlDbType.YEAR)
             {
                 return true;
             }
@@ -905,7 +906,7 @@ namespace LTCingFW.utils
                         }
                     }
                 }
-                sb.Remove(sb.Length-1 ,1);
+                sb.Remove(sb.Length - 1, 1);
                 sb.Append(">");
                 returnStr = sb.ToString();
             }
@@ -967,11 +968,11 @@ namespace LTCingFW.utils
         }
 
 
-        public static object GetCommonTypeValue(object value,string commonType)
+        public static object GetCommonTypeValue(object value, string commonType)
         {
             if (commonType == OrmDataType.CommonType.STRING.ToString().ToUpper()) { return Convert.ToString(value); }
-            else if (commonType == OrmDataType.CommonType.INT.ToString().ToUpper()) { return  Convert.ToInt32(value); }
-            else if (commonType == OrmDataType.CommonType.DECIMAL.ToString().ToUpper()) { return  Convert.ToDecimal(value); }
+            else if (commonType == OrmDataType.CommonType.INT.ToString().ToUpper()) { return Convert.ToInt32(value); }
+            else if (commonType == OrmDataType.CommonType.DECIMAL.ToString().ToUpper()) { return Convert.ToDecimal(value); }
             else if (commonType == OrmDataType.CommonType.DATE.ToString().ToUpper()) { return Convert.ToDateTime(value); }
             else if (commonType == OrmDataType.CommonType.BOOL.ToString().ToUpper()) { return Convert.ToBoolean(value); }
             else if (commonType == OrmDataType.CommonType.BINARY.ToString().ToUpper()) {
@@ -983,20 +984,150 @@ namespace LTCingFW.utils
                 {
                     throw new LTCingFWException("值不是byte[]类型！");
                 }
-                
+
             }
             else { throw new LTCingFWException(commonType + "不是六种类型之一！"); }
         }
 
-        public static object CreateInstanceByClassFullName(Assembly assembly,string classFullName)
+        public static object CreateInstanceByClassFullName(Assembly assembly, string classFullName)
         {
             Type t = assembly.GetType(classFullName);
-            if (t!=null)
+            if (t != null)
             {
                 return assembly.CreateInstance(classFullName);
             }
             return null;
         }
+
+        /// <summary>
+        /// 将DBSession加入到框架中
+        /// 目前支持mysql,sqlserver,oracle
+        /// </summary>
+        /// <param name="dbType"></param>
+        /// <param name="dbAlias"></param>
+        /// <param name="connStr"></param>
+        /// <param name=""></param>
+        public static void AddDBSession( string dbType ,string dbAlias, string connStr )
+        {
+            if (dbType.ToLower().Trim() == "mysql")
+            {
+                String ProviderName = "MySql.Data.MySqlClient";
+                //server=127.0.0.1;database=test;user id=root;password=root;connectiontimeout=5;pooling=True;maxpoolsize=500;minpoolsize=1
+                LTCingFWSet.AddDB(dbAlias, ProviderName, connStr);
+            }
+            if (dbType.ToLower().Trim() == "sqlserver")
+            {
+                String ProviderName = "System.Data.SqlClient";
+                //Data Source=192.168.2.50;Initial Catalog=btmsdb;User ID=gserver;Password=Gserver246;Pooling=True;Min Pool Size=1;Max Pool Size=500;Connect Timeout=5
+                LTCingFWSet.AddDB(dbAlias, ProviderName, connStr);
+            }
+            if (dbType.ToLower().Trim() == "oracle")
+            {
+                String ProviderName = "Oracle.ManagedDataAccess.Client";
+                //DATA SOURCE=192.168.12.241:1522/fmsdb;USER ID=lgc;PASSWORD=FMSdba2018;POOLING=True;MAX POOL SIZE=500;DECR POOL SIZE=2;CONNECTION TIMEOUT=5;INCR POOL SIZE=5;MIN POOL SIZE=1
+                LTCingFWSet.AddDB(dbAlias, ProviderName, connStr);
+            }
+        }
+
+        public static Boolean IsDbAliasExist(string dbAlias)
+        {
+            return LTCingFWSet.FindDbByAlias(dbAlias);
+        }
+
+        /// <summary>
+        /// 获取13位的时间戳字符串
+        /// </summary>
+        /// <returns></returns>
+        public static string GetNowTimeStr13()
+        {
+            return GetTimeStr13(DateTime.Now);
+        }
+        public static string GetTimeStr13(DateTime time)
+        {
+            return (time.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds.ToString("0000000000000");
+        }
+        /// <summary>
+        /// 获取10位的时间戳字符串
+        /// </summary>
+        /// <returns></returns>
+        public static string GetNowTimeStr10()
+        {
+            return GetTimeStr10(DateTime.Now);
+        }
+        public static string GetTimeStr10(DateTime time)
+        {
+            return (time.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds.ToString("0000000000");
+        }
+
+
+        /// <summary>
+        /// 反射调用控制器方法
+        /// </summary>
+        /// <param name="ControllerName">控制器类名</param>
+        /// <param name="MethodName">方法名</param>
+        /// <param name="parms">参数</param>
+        /// <returns></returns>
+        public static object ExecControllerMethod(String ControllerName, String MethodName, object[] parms)
+        {
+            object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
+            MethodInfo info = kepc.GetType().GetMethod(MethodName, BindingFlags.Public | BindingFlags.Instance);
+            object dt_data = info.Invoke(kepc, parms);
+            return dt_data;
+        }
+
+
+        public static void OpenThread(BaseThread threadContext, string threadName, object param)
+        {
+            Dictionary<String, ThreadInfo> thread_pool = LTCingFWSet.ThreadPool;
+            if (thread_pool.Keys.Contains(threadName))
+            {
+                BaseThread rth = (BaseThread)thread_pool[threadName].ContextObject;
+                rth.IsOpen = true;
+            }
+            else
+            {
+                threadContext.IsOpen = true;
+                Thread thd = new Thread(new ParameterizedThreadStart(threadContext.run));
+                thd.IsBackground = true;
+                thd.Name = threadName;
+                thd.Start(param);
+                ThreadInfo tinfo = new ThreadInfo(thd, threadContext);
+                thread_pool.Add(threadName, tinfo);
+            }
+        }
+
+        public static void CloseThread(string threadName)
+        {
+            Dictionary<String, ThreadInfo> thread_pool = LTCingFWSet.ThreadPool;
+            if (thread_pool.Keys.Contains(threadName))
+            {
+                BaseThread rth = (BaseThread)thread_pool[threadName].ContextObject;
+                rth.IsOpen = false;
+                thread_pool.Remove(threadName);
+            }
+        }
+
+        public static bool ThreadisLiving(string threadName)
+        {
+            Dictionary<String, ThreadInfo> thread_pool = LTCingFWSet.ThreadPool;
+            if (thread_pool.Keys.Contains(threadName))
+            {
+                BaseThread rth = (BaseThread)thread_pool[threadName].ContextObject;
+                if (rth.IsOpen == true)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
 
     }
 }

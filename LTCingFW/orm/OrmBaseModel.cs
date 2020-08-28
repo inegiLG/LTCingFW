@@ -14,6 +14,8 @@ namespace LTCingFW
     public class OrmBaseModel : OrmBaseDao
     {
 
+        public string DiyTableName { get; set; }
+
         //分页使用
         protected DataTable tablePage = new DataTable();
         /// <summary>

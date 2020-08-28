@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,12 @@ namespace LTCingFW
 {
     public class LTCingFWSet
     {
+
+        /// <summary>
+        /// 线程池
+        /// </summary>
+        public static Dictionary<String, ThreadInfo> ThreadPool { get; } = new Dictionary<String, ThreadInfo>();
+
         /// <summary>
         /// 所有的FwInstanceBean
         /// </summary>
@@ -26,6 +33,11 @@ namespace LTCingFW
         /// 所有的DB连接
         /// </summary>
         internal static Dictionary<String, DB_Leaf> dbDic { get; } = new Dictionary<String, DB_Leaf>();
+
+        /// <summary>
+        /// 错误列表
+        /// </summary>
+        private static List<Exception> _errList { get; set; } = new List<Exception>();
 
         /// <summary>
         /// 线程上下文
@@ -84,6 +96,16 @@ namespace LTCingFW
         }
 
         /// <summary>
+        /// 外部接口，获取错误列表
+        /// </summary>
+        public static List<Exception> ErrList
+        {
+            get {
+                return _errList;
+            }
+        }
+
+        /// <summary>
         /// 外部接口，获取线程上下文
         /// </summary>
         /// <param name="ThreadManagedId"></param>
@@ -111,6 +133,16 @@ namespace LTCingFW
             return XmlDoc.SelectSingleNode(configPath).InnerText.Trim();
         }
 
+        public static void SaveConfigToXml(string configPath,string value) {
+            XmlNode node = XmlDoc.SelectSingleNode(configPath);
+            if (node != null)
+            {
+                node.InnerText = value;
+                XmlDoc.Save(FWConfigs.XmlFilePath);
+            }
+        }
+
+
         public static void AddDB(string dbAlias, string dbProvider, string dbConnectionStr )
         {
             DB_Leaf leaf = new DB_Leaf();
@@ -122,5 +154,37 @@ namespace LTCingFW
             }
             dbDic.Add(dbAlias, leaf);
         }
+        public static Boolean FindDbByAlias(string alias)
+        {
+            if (dbDic.Keys.Contains(alias))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static void AddBean(string bean_name, string bean_type) 
+        {
+            Assembly[] AllAssembly = AppDomain.CurrentDomain.GetAssemblies();
+            bool findFlg = false;
+            foreach (Assembly assem in AllAssembly)
+            {
+                if (assem.GetType(bean_type) != null)
+                {
+                    LTCingFWSet.Beans.Add(new FwInstanceBean(bean_name, bean_type, assem));
+                    //logger.Info(String.Format("FrameWork find instance[{0}] with name[{1}] from config file", bean_type, bean_name));
+                    findFlg = true;
+                    break;
+                }
+            }
+            if (!findFlg)
+            {
+                throw new Exception("framework can not create bean instance of type[" + bean_type + "] from  config file.");
+            }
+        }
+
     }
 }

@@ -62,6 +62,22 @@ namespace LTCingFW
                         parameters.ReferencedAssemblies.Add(item.Location);
                     }
                 }
+                foreach (AssemblyName itemName in UsedAssembly)
+                {
+                    bool hasFlag = false;
+                    foreach (string ass in parameters.ReferencedAssemblies)
+                    {
+                        if (ass.Contains(itemName.Name + ".dll"))
+                        {
+                            hasFlag = true;
+                            break;
+                        }
+                    }
+                    if (!hasFlag && !itemName.FullName.Contains("WindowsBase"))
+                    {
+                        parameters.ReferencedAssemblies.Add(itemName.Name + ".dll");
+                    }
+                }
                 foreach (AssemblyName itemName in UsedAssembly2)
                 {
                     bool hasFlag = false;
@@ -292,7 +308,8 @@ namespace LTCingFW
                     sb.Append(" }\n catch (Exception ex) { \n ");
                     //sb.Append(" logger.Warn(\"Proxy_InnerException:\"+ex.Message+ex.StackTrace);\n");
                     sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); session.Close();\n}\n");
-                    sb.Append("  throw new LTCingFWException(\"事务回滚,：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
+                    sb.Append("  LTCingFWSet.ErrList.Add(ex); \n");
+                    //sb.Append("  throw new LTCingFWException(\"事务回滚,：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
                     sb.Append(" }\n ");
                     sb.Append(" finally \n { \n if(!outerSession)\n{\n if(session != null && !session.IsClosed()) \n{ \n session.Close(); \n}\n ");
                     sb.Append(" if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");

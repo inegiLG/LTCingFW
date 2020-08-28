@@ -18,7 +18,7 @@ namespace LTCingFW
     public class OrmBaseDao
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(OrmBaseDao));
-
+        public const string BY_TABLE_NAME_PROPERTY = "8TableName";
         /// <summary>
         /// 获取表名
         /// </summary>
@@ -42,7 +42,20 @@ namespace LTCingFW
                 {
                     if (attr.DbAlias != null && attr.DbAlias == session.DbAlias)
                     {
-                        return attr.TableName;
+                        string tbName = null;
+                        if (attr.TableName == BY_TABLE_NAME_PROPERTY)
+                        {
+                            object value = FwUtilFunc.GetObjectPropertyValue(model, "DiyTableName");
+                            if (value == null)
+                            {
+                                throw new Exception(model.GetType().Name + "类在使用BY_TABLE_NAME_PROPERTY/8TableName作为表名的情况下，必须给TableName属性赋值");
+                            }
+                        }
+                        else
+                        {
+                            tbName = attr.TableName;
+                        }
+                        return tbName;
                     }
                 }
                 return attrs[0].TableName;
@@ -1100,10 +1113,6 @@ namespace LTCingFW
             {
                 logger.Debug(sql);
                 DbDataAdapter adapter = DBSession.GetDataAdapter(session, sql);
-                if (session.Transaction != null)
-                {
-                    adapter.SelectCommand.Transaction = session.Transaction;
-                }
                 if (parameters != null)
                 {
                     adapter.SelectCommand.Parameters.AddRange(parameters);
@@ -1414,11 +1423,7 @@ namespace LTCingFW
                 session = LTCingFWSet.GetThreadContext().DBSession;
             }
             DbDataAdapter adapter = DBSession.GetDataAdapter(session, sql);
-            DbCommand cmd = session.Connection.CreateCommand();
-            if (session.Transaction != null)
-            {
-                cmd.Transaction = session.Transaction;
-            }
+
             DataTable resultTable = new DataTable();
             adapter.Fill(resultTable);
             return resultTable;

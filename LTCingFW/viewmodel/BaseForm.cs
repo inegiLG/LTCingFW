@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LTCingFW.beans;
+using LTCingFW.thread;
 using LTCingFW.utils;
 
 namespace LTCingFW
@@ -139,12 +141,18 @@ namespace LTCingFW
 
         public object ExecControllerMethod(String ControllerName ,String MethodName,object[] parms)
         {
-            object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
-            MethodInfo info = kepc.GetType().GetMethod(MethodName, BindingFlags.Public | BindingFlags.Instance);
-            object dt_data = info.Invoke(kepc, parms);
-            return dt_data;
+            return FwUtilFunc.ExecControllerMethod(ControllerName, MethodName, parms);
         }
 
+        public void AsyncExecOnceControllerMethod(String threadName, String ControllerName, String MethodName, object[] parms, ThreadCallBackDelegate callback)
+        {
+            ThreadParam prams = new ThreadParam();
+            prams.ControllerName = ControllerName;
+            prams.MethodName = MethodName;
+            prams.MethodParams = parms;
+            prams.CallBack = callback;
+            utils.FwUtilFunc.OpenThread(new ExecOnceThread(),threadName, prams);
+        }
 
     }
 }

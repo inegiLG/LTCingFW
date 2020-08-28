@@ -13,9 +13,13 @@ namespace LTCingFW.utils
 
         public string message { get; set; } = "操作成功";
 
-        public string detail { get; set; }
+        public string detail { get; set; } = "";
 
         public object result { get; set; }
+
+        public string startTime { get; set; } = FwUtilFunc.GetNowTimeStr13();
+
+        public string endTime { get; set; } = FwUtilFunc.GetNowTimeStr13();
 
 
     }

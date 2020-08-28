@@ -167,6 +167,9 @@ namespace LTCingFW
             }
             DbCommand cmd = session.Connection.CreateCommand();
             cmd.CommandText = sql;
+            if (session.Transaction != null) {
+                cmd.Transaction = session.Transaction;
+            }
             adapter.SelectCommand = cmd;
             return adapter;
         }

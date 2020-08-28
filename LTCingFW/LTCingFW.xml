@@ -33,6 +33,10 @@
       <incrsize>5</incrsize>
       <decrsize>2</decrsize>
     </db>
+    <db dbAlias="labdb">
+      <providername>System.Data.SqlClient</providername>
+      <connectionstring>Data Source=192.168.12.241;Initial Catalog=FMSDC;User ID=sa;Password=Admin2020;Pooling=True;Min Pool Size=1;Max Pool Size=500;Connect Timeout=5</connectionstring>
+    </db>
   </dbs>
   <cache>
     <switch>on/off</switch>

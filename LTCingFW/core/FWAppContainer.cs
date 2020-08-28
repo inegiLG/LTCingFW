@@ -20,13 +20,16 @@ namespace LTCingFW
 
         public static void setProperty(string x, object y)
         {
-            if (_appContainer.ContainsKey(x))
+            lock (_appContainer)
             {
-                _appContainer[x] = y;
-            }
-            else
-            {
-                _appContainer.Add(x, y);
+                if (_appContainer.ContainsKey(x))
+                {
+                    _appContainer[x] = y;
+                }
+                else
+                {
+                    _appContainer.Add(x, y);
+                }
             }
         }
 
@@ -40,9 +43,12 @@ namespace LTCingFW
 
         public static void removeProperty(string x)
         {
-            if (_appContainer.ContainsKey(x))
+            lock (_appContainer)
             {
-                _appContainer.Remove(x);
+                if (_appContainer.ContainsKey(x))
+                {
+                    _appContainer.Remove(x);
+                }
             }
         }
 

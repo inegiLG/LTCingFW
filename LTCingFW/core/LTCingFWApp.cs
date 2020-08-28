@@ -5,10 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using LTCingFW.utils;
-
-
-
-
+using LTCingFW.thread;
 
 namespace LTCingFW
 {
@@ -29,6 +26,7 @@ namespace LTCingFW
                 lookForConfigAspect_();
                 LTCingFWProxy.createProxyForInstance();
                 injectPropertytoInstance();
+                startErrDealThread();
                 logger.Info("------------------------ LTCingFrameWork Started --------------------------");
             }
             catch (Exception e)
@@ -260,9 +258,6 @@ namespace LTCingFW
         }
 
 
-
-
-
         //}
         /// <summary>
         /// 查找AOP配置信息
@@ -288,7 +283,11 @@ namespace LTCingFW
                 throw new LTCingFWException("查找配置文件标注切面出错！", ex);
             }
 
+        }
 
+
+        private static void startErrDealThread() {
+            FwUtilFunc.OpenThread(new ErrorDealThread(),"LTCingFW_ERR_DEAL_THREAD",null);
         }
 
 
