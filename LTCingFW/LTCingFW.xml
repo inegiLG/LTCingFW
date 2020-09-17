@@ -40,9 +40,7 @@
   </dbs>
   <cache>
     <switch>on/off</switch>
-    <type>memory/local/net</type>
-    <localposition></localposition>
-    <netposition></netposition>
+    <type>memory</type>
   </cache>
   <configs>
     <sqlserverdatalocation>E:\SqlserverData\</sqlserverdatalocation>
