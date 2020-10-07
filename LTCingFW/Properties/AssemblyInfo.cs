@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("LTCingFW")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("轻量级IOC框架，主要包括ORM、AOP等")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("LTCingFW")]

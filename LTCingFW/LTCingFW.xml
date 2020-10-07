@@ -2,7 +2,7 @@
 
 <LTCingFW>
   <beans>
-    <bean name="OpcServerService" type="Convertor4.Service.OpcServerService" />
+    <bean name="OPCControl" type ="OPCServerRW.OPCControl"></bean>
   </beans>
   <aspects>
     <aspect scope="*.Service.*.~Save" beforemethod="LGPMS.Aop.AopPlugIns.testBeforeAop" aftermethod="LGPMS.Aop.AopPlugIns.testAfterAop"/>
@@ -36,6 +36,14 @@
     <db dbAlias="labdb">
       <providername>System.Data.SqlClient</providername>
       <connectionstring>Data Source=192.168.12.241;Initial Catalog=FMSDC;User ID=sa;Password=Admin2020;Pooling=True;Min Pool Size=1;Max Pool Size=500;Connect Timeout=5</connectionstring>
+    </db>
+    <db dbAlias="oracle1">
+      <providername>Oracle.ManagedDataAccess.Client</providername>
+      <connectionstring>DATA SOURCE=192.168.12.241:1522/fmsdb;USER ID=lgc;PASSWORD=FMSdba2018;POOLING=True;MAX POOL SIZE=500;DECR POOL SIZE=2;CONNECTION TIMEOUT=5;INCR POOL SIZE=5;MIN POOL SIZE=1</connectionstring>
+    </db>
+    <db dbAlias="mysql1">
+      <providername>MySql.Data.MySqlClient</providername>
+      <connectionstring>server=127.0.0.1;database=test;user id=root;password=root;connectiontimeout=5;pooling=True;maxpoolsize=500;minpoolsize=1</connectionstring>
     </db>
   </dbs>
   <cache>

@@ -299,7 +299,8 @@ namespace LTCingFW.utils
                         {
                             continue;
                         }
-                        object value = row[info.Name];
+                        string colName = (attrs[0] as OrmColumnAttribute).ColName;
+                        object value = row[colName];
                         if (value is System.DBNull)
                         {
                             info.SetValue(model, null); //NULL
