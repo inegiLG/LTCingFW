@@ -188,14 +188,15 @@ namespace LTCingFW
 
                     if (mi.Name == "NoticeDataChangedCallBack")
                     { }
-
-                    #region 设置方法名、参数、返回值还原
-                    String OverrideTag = "";
-                    if (mi.IsVirtual)
+                    if (!mi.IsVirtual)
                     {
-                        OverrideTag = "override";
+                        continue;
                     }
-                    sb.Append(String.Format("\n public {0} {1} {2} {3}( ", OverrideTag, FwUtilFunc.GetRegularReturnType(mi.ReturnType), mi.Name, mi.ReturnType.FullName==null? "<T> " : ""));
+                    #region 设置方法名、参数、返回值还原
+                    String OverrideTag = "override";
+   
+                    string method_head = String.Format("\n public {0} {1} {2} {3}( ", OverrideTag, FwUtilFunc.GetRegularReturnType(mi.ReturnType), mi.Name, mi.ReturnType.FullName == null ? "<T> " : "");
+                    sb.Append(method_head);
                     #endregion
 
                     #region 方法内前置内容
@@ -204,7 +205,9 @@ namespace LTCingFW
                     StringBuilder objStr = new StringBuilder(" ");
                     for (int i = 0; i < paramInfos.Length; i++)
                     {
-                        sb.Append(FwUtilFunc.GetRegularReturnType(paramInfos[i].ParameterType)).Append(" para").Append(i).Append(" ,");
+                        sb.Append(FwUtilFunc.GetRegularReturnType(paramInfos[i].ParameterType));
+
+                        sb.Append(" para").Append(i).Append(" ,");
                         if (paramInfos[i].ParameterType.IsByRef)
                         {
                             paramStr.Append(" ref");
@@ -215,10 +218,10 @@ namespace LTCingFW
                     paramStr.Remove(paramStr.Length - 1, 1);
                     sb.Remove(sb.Length - 1, 1);
                     sb.Append(")");
-                    if (mi.ReturnType.FullName == null)
-                    {
-                        sb.Append(" where T : OrmBaseModel");
-                    }
+                    //if (mi.ReturnType.FullName == null)
+                    //{
+                    //    sb.Append(" where T : OrmBaseModel");
+                    //}
                     sb.Append("{\n");
                     sb.Append(" object[] paras = new object[]{ ").Append(objStr).Append("};\n");
                     sb.Append(" bool outerSession = false;\n");

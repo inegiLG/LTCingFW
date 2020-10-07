@@ -911,6 +911,10 @@ namespace LTCingFW.utils
                 sb.Append(">");
                 returnStr = sb.ToString();
             }
+            //if (ReturnType.Name == "T" || ReturnType.FullName == null)
+            //{
+            //    returnStr = "T";
+            //}
             //Array
             if (ReturnType.Name.Contains("Array&"))
             {
