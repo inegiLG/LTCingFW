@@ -14,11 +14,14 @@ using System.Text;
 
 namespace LTCingFW
 {
-    
+
     public class OrmBaseDao
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(OrmBaseDao));
         public const string BY_TABLE_NAME_PROPERTY = "8TableName";
+
+        #region 通用方法
+
         /// <summary>
         /// 获取表名
         /// </summary>
@@ -108,7 +111,7 @@ namespace LTCingFW
         /// <param name="model"></param>
         /// <param name="withoutNullColumn">列不可以设定为null，如果是null则不操作该列</param>
         /// <returns></returns>
-        private String GetInsertAllColumnNameStr(DBSession session, OrmBaseModel model ,bool withoutNullColumn)
+        private String GetInsertAllColumnNameStr(DBSession session, OrmBaseModel model, bool withoutNullColumn)
         {
             try
             {
@@ -130,7 +133,8 @@ namespace LTCingFW
                     //    throw new Exception( attr.ColName + " Primary Key is Null" );
                     //}
                     //如果是列为空则不操作该列，跳过
-                    if (withoutNullColumn && bean.Value == null) {
+                    if (withoutNullColumn && bean.Value == null)
+                    {
                         continue;
                     }
                     sb.Append(attr.ColName).Append(',');
@@ -152,7 +156,7 @@ namespace LTCingFW
         /// <param name="model"></param>
         /// <param name="ValueList"></param>
         /// <param name="sqlText"></param>
-        private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText,bool withoutNullColumn)
+        private void GetInsertColumnValues(DBSession session, OrmBaseModel model, List<DbParameter> ValueList, StringBuilder sqlText, bool withoutNullColumn)
         {
             try
             {
@@ -170,11 +174,12 @@ namespace LTCingFW
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                     //可能是自增列，主键为空交给数据库判断
-                    //if (attr.PrimaryKey && bean.Value == null)
-                    //{
-                    //    throw new Exception( attr.ColName+" Primary key is Null!") ;
-                    //}
-                    if (withoutNullColumn && bean.Value == null) {
+                    if (attr.PrimaryKey && bean.Value == null)
+                    {
+                        throw new LTCingFWException(attr.ColName + " 插入操作主键不可为空!");
+                    }
+                    if (withoutNullColumn && bean.Value == null)
+                    {
                         continue;
                     }
                     string mark = "@";
@@ -254,9 +259,9 @@ namespace LTCingFW
                 sb.Remove(sb.Length - 1, 1);//去掉最后一个逗号
                 return sb.ToString();
             }
-            catch (Exception )
+            catch (Exception)
             {
-                throw ;
+                throw;
             }
 
         }
@@ -419,7 +424,7 @@ namespace LTCingFW
                             {
                                 res = value;
                             }
-                            else if(value is string)
+                            else if (value is string)
                             {
                                 if (Convert.ToString(value).Trim() == "0" || Convert.ToString(value).Trim().ToUpper() == "FALSE")
                                 {
@@ -468,7 +473,7 @@ namespace LTCingFW
             }
             catch (Exception e)
             {
-                throw new LTCingFWException(colName+"列参数赋值前根据ColType类型进行数据类型强转时错误！类型[" + colType + "] 值为["+ value.ToString() + "]", e);
+                throw new LTCingFWException(colName + "列参数赋值前根据ColType类型进行数据类型强转时错误！类型[" + colType + "] 值为[" + value.ToString() + "]", e);
             }
 
 
@@ -513,7 +518,10 @@ namespace LTCingFW
                         {
                             hasPrimaryKey = true;
                         }
-
+                        if (onlyPrimaryKey && attr.PrimaryKey && bean.Value == null)
+                        {
+                            throw new LTCingFWException("使用主键时，主键不可为空！");
+                        }
                         if (onlyPrimaryKey && !attr.PrimaryKey) { }
                         else
                         {
@@ -548,7 +556,6 @@ namespace LTCingFW
                                 param.Value = getProperDbParameterValue(bean.Value, attr.ColType, attr.ColName);
                                 ValueList.Add(param);
                             }
-
                         }
 
                     }
@@ -564,456 +571,6 @@ namespace LTCingFW
             }
 
 
-        }
-
-
-
-
-        /// <summary>
-        /// 为普通的sql语句加上分页信息
-        /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private String addPaginationSql(String sql, DBSession session, OrmBaseModel model)
-        {
-            try
-            {
-                if (model == null && this is OrmBaseModel)
-                {
-                    model = (OrmBaseModel)this;
-                }
-                if (session == null)
-                {
-                    session = LTCingFWSet.GetThreadContext().DBSession;
-                }
-                int max_limit = model.UpLimitNumber;
-                int min_limit = model.LowLimitNumber;
-                String allColumnString = GetAllColumnNameStr(session, model);
-                StringBuilder sb = new StringBuilder();
-                String orderby = "";
-                if (FwUtilFunc.StringIsEmpty(model.OrderBy))
-                {
-                    foreach (OrmColumnBean bean in model.OrmList)
-                    {
-                        if (bean.OrmColumnAttributeDic[session.DbAlias].PrimaryKey)
-                        {
-                            orderby = " " + bean.ColumnName + " DESC ";
-                        }
-                    }
-                }
-                else
-                {
-                    orderby = model.OrderBy;
-                }
-
-                //oracle
-                if (session.ProviderName == DBSession.Oracle_ProviderName)
-                {
-                    sql = sql + " ORDER BY " + orderby;
-                    sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
-                    sb.Append(" ( SELECT ").Append(" ROWNUM RN , ").Append(allColumnString);
-                    sb.Append(" FROM ( ").Append(sql).Append(" ) ").Append(" WHERE ROWNUM <= ").Append(max_limit).Append(" ) ");
-                    sb.Append(" WHERE RN >= ").Append(min_limit);
-
-                }
-                //sqlserver
-                if (session.ProviderName == DBSession.SqlServer_ProviderName)
-                {
-                    sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
-                    sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER( ORDER BY ").Append(orderby).Append(" ) RN, ");
-                    sb.Append(allColumnString).Append(" FROM ( ").Append(sql).Append(" ) t ) w2 ");
-                    sb.Append(" WHERE w2.RN >= ").Append(min_limit);
-                    sb.Append(" ORDER BY w2.RN ASC ");
-
-                }
-                //mysql
-                if (session.ProviderName == DBSession.MySql_ProviderName)
-                {
-                    sql = sql + " ORDER BY " + orderby;
-                    sb.Append(sql).Append(" LIMIT ").Append(min_limit - 1).Append(",").Append(model.PageItemCount);
-                }
-
-                return sb.ToString();
-            }
-            catch (Exception e)
-            {
-
-                throw new LTCingFWException("生成分页语句出错！", e);
-            }
-
-        }
-
-        /// <summary>
-        /// 获取条目数(OrmModel使用)
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public int GetItemCount(DBSession session)
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return GetItemCount(session, null);
-        }
-
-        /// <summary>
-        /// 获取条目数
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public int GetItemCount(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            StringBuilder sql = new StringBuilder();
-            sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
-            List<DbParameter> ValueList = new List<DbParameter>();
-            SetModelWhereSqlTextAndValues(session, model, sql, ValueList, false);
-            DbCommand cmd = session.Connection.CreateCommand();
-            if (FwUtilFunc.StringIsNotEmpty(model.Where))
-            {
-                if (!model.Where.TrimStart().StartsWith("AND"))
-                {
-                    sql.Append(" AND ");
-                }
-                sql.Append(model.Where);
-            }
-            cmd.CommandText = sql.ToString();
-            logger.Debug(sql.ToString());
-            cmd.Parameters.AddRange(ValueList.ToArray());
-            object result = cmd.ExecuteScalar();
-            return Convert.ToInt32(result);
-        }
-
-        /// <summary>
-        /// 分页查询(OrmModel使用)
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public DataTable SelectPage(DBSession session)
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return SelectPage(session, null);
-        }
-
-        /// <summary>
-        /// 分页查询
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns>DataTable</returns>
-        public DataTable SelectPage(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DbConnection conn = session.Connection;
-            List<DbParameter> ValueList = new List<DbParameter>();
-            StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" SELECT ");
-            if (model.Distinct)
-            {
-                sqlText.Append(" DISTINCT ");
-            }
-            sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
-            if (FwUtilFunc.StringIsNotEmpty(model.Where))
-            {
-                if (!model.Where.TrimStart().StartsWith("AND"))
-                {
-                    sqlText.Append(" AND ");
-                }
-                sqlText.Append(model.Where);
-            }
-
-            String pageSql = addPaginationSql(sqlText.ToString(), session, model);
-            #region 缓存(分页不用)
-            //if (CacheFactory.IsCached(session, model))
-            //{
-            //   DataTable cache = CacheFactory.GetTabelCache(pageSql);
-            //    if (cache != null)
-            //    {
-            //        return cache;
-            //    }
-            //    else {
-            //        DataTable table = Select(conn, pageSql, ValueList.ToArray()).Copy();
-            //        table.TableName = GetTableName(session, model);
-            //        CacheFactory.SetTableCache(pageSql, table);
-            //        return table;
-            //    }
-            //}
-            #endregion
-            return Select( session, pageSql, ValueList.ToArray());
-        }
-
-        /// <summary>
-        /// 分页查询(OrmModel使用)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public List<T> SelectPage<T>(DBSession session) where T : OrmBaseModel
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return SelectPage<T>(session, null);
-        }
-
-        /// <summary>
-        /// 分页查询
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns>List<T></returns>
-        public List<T> SelectPage<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DataTable res = SelectPage(session, model);
-            List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
-            foreach (T ormModel in resT)
-            {
-                QueryForForeignOrmModel(session, ormModel);
-            }
-            return resT;
-        }
-
-        /// <summary>
-        /// 默认选择,根据有值列(OrmModel使用)
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public DataTable Select(DBSession session)
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return Select(session, null);
-        }
-
-        /// <summary>
-        /// 默认选择,根据有值列
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <returns></returns>
-        public DataTable Select(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DbConnection conn = session.Connection;
-            List<DbParameter> ValueList = new List<DbParameter>();
-            StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" SELECT ");
-            if (model.Distinct)
-            {
-                sqlText.Append(" DISTINCT ");
-            }
-            if (model.SqlServerTop != 0)
-            {
-                sqlText.Append(" TOP ").Append(model.SqlServerTop).Append(" ");
-            }
-            sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
-            if (FwUtilFunc.StringIsNotEmpty(model.Where))
-            {
-                if (!model.Where.TrimStart().StartsWith("AND"))
-                {
-                    sqlText.Append(" AND ");
-                }
-                sqlText.Append(model.Where);
-            }
-            if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
-            {
-                sqlText.Append(" ORDER BY ").Append(model.OrderBy);
-            }
-            #region 缓存
-            if (CacheFactory.IsCached(session, model))
-            {
-                DataTable cache = CacheFactory.GetTabelCache(sqlText.ToString());
-                if (cache != null)
-                {
-                    return cache;
-                }
-                else
-                {
-                    DataTable table = Select( session, sqlText.ToString(), ValueList.ToArray()).Copy();
-                    CacheFactory.SetTableCache(sqlText.ToString(), table);
-                    return table;
-                }
-            }
-            #endregion
-            return Select( session, sqlText.ToString(), ValueList.ToArray());
-        }
-
-        /// <summary>
-        /// 查询，返回List<T>(OrmModel使用)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public List<T> SelectT<T>(DBSession session) where T : OrmBaseModel
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return SelectT<T>(session);
-        }
-
-        /// <summary>
-        /// 查询，返回List<T>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public List<T> SelectT<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DataTable res = Select(session, model);
-            List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
-            foreach (T ormModel in resT)
-            {
-                QueryForForeignOrmModel(session, ormModel);
-            }
-            return resT;
-        }
-
-        /// <summary>
-        /// 通过主键查询(OrmModel使用)
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public DataTable SelectByPrimaryKey(DBSession session)
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return SelectByPrimaryKey(session, null);
-        }
-
-        /// <summary>
-        /// 通过主键查询
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public DataTable SelectByPrimaryKey(DBSession session, OrmBaseModel model)
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DbConnection conn = session.Connection;
-            List<DbParameter> ValueList = new List<DbParameter>();
-            StringBuilder sqlText = new StringBuilder();
-            sqlText.Append(" SELECT ");
-            if (model.Distinct)
-            {
-                sqlText.Append(" DISTINCT ");
-            }
-            sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
-            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, true);
-            if (FwUtilFunc.StringIsNotEmpty(model.Where))
-            {
-                if (!model.Where.TrimStart().StartsWith("AND"))
-                {
-                    sqlText.Append(" AND ");
-                }
-                sqlText.Append(model.Where);
-            }
-            if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
-            {
-                sqlText.Append(" ORDER BY ").Append(model.OrderBy);
-            }
-            return Select( session, sqlText.ToString(), ValueList.ToArray());
-        }
-
-        /// <summary>
-        /// 通过主键查询,返回List<T>(OrmModel使用)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public List<T> SelectByPrimaryKey<T>(DBSession session) where T : OrmBaseModel
-        {
-            if (!(this is OrmBaseModel))
-            {
-                throw new LTCingFWException("此方法仅供OrmModel使用！");
-            }
-            return SelectByPrimaryKey<T>(session, null);
-        }
-
-        /// <summary>
-        /// 通过主键查询,返回List<T>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public List<T> SelectByPrimaryKey<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
-        {
-            if (model == null && this is OrmBaseModel)
-            {
-                model = (OrmBaseModel)this;
-            }
-            if (session == null)
-            {
-                session = LTCingFWSet.GetThreadContext().DBSession;
-            }
-            DataTable res = SelectByPrimaryKey(session, model);
-            List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
-            foreach (T resModel in resT)
-            {
-                QueryForForeignOrmModel(session, resModel);
-            }
-            return resT;
         }
 
         /// <summary>
@@ -1100,6 +657,460 @@ namespace LTCingFW
             }
         }
 
+
+        /// <summary>
+        /// 为普通的sql语句加上分页信息
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private String addPaginationSql(String sql, DBSession session, OrmBaseModel model)
+        {
+            try
+            {
+                if (model == null && this is OrmBaseModel)
+                {
+                    model = (OrmBaseModel)this;
+                }
+                if (session == null)
+                {
+                    session = LTCingFWSet.GetThreadContext().DBSession;
+                }
+                int max_limit = model.UpLimitNumber;
+                int min_limit = model.LowLimitNumber;
+                String allColumnString = GetAllColumnNameStr(session, model);
+                StringBuilder sb = new StringBuilder();
+                String orderby = "";
+                if (FwUtilFunc.StringIsEmpty(model.OrderBy))
+                {
+                    foreach (OrmColumnBean bean in model.OrmList)
+                    {
+                        if (bean.OrmColumnAttributeDic[session.DbAlias].PrimaryKey)
+                        {
+                            orderby = " " + bean.ColumnName + " DESC ";
+                        }
+                    }
+                }
+                else
+                {
+                    orderby = model.OrderBy;
+                }
+
+                //oracle
+                if (session.ProviderName == DBSession.Oracle_ProviderName)
+                {
+                    sql = sql + " ORDER BY " + orderby;
+                    sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
+                    sb.Append(" ( SELECT ").Append(" ROWNUM RN , ").Append(allColumnString);
+                    sb.Append(" FROM ( ").Append(sql).Append(" ) ").Append(" WHERE ROWNUM <= ").Append(max_limit).Append(" ) ");
+                    sb.Append(" WHERE RN >= ").Append(min_limit);
+
+                }
+                //sqlserver
+                if (session.ProviderName == DBSession.SqlServer_ProviderName)
+                {
+                    sb.Append(" SELECT ").Append(allColumnString).Append(" FROM ");
+                    sb.Append(" ( SELECT TOP ").Append(max_limit).Append(" ROW_NUMBER() OVER( ORDER BY ").Append(orderby).Append(" ) RN, ");
+                    sb.Append(allColumnString).Append(" FROM ( ").Append(sql).Append(" ) t ) w2 ");
+                    sb.Append(" WHERE w2.RN >= ").Append(min_limit);
+                    sb.Append(" ORDER BY w2.RN ASC ");
+
+                }
+                //mysql
+                if (session.ProviderName == DBSession.MySql_ProviderName)
+                {
+                    sql = sql + " ORDER BY " + orderby;
+                    sb.Append(sql).Append(" LIMIT ").Append(min_limit - 1).Append(",").Append(model.PageItemCount);
+                }
+
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+
+                throw new LTCingFWException("生成分页语句出错！", e);
+            }
+
+        }
+        #endregion
+
+        #region GetItemCount系
+        /// <summary>
+        /// 获取条目数(OrmModel使用)
+        /// </summary>
+        /// <returns></returns>
+        public int GetItemCount()
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return GetItemCount(null, null);
+        }
+        /// <summary>
+        /// 获取条目数(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public int GetItemCount(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return GetItemCount(session, null);
+        }
+
+        /// <summary>
+        /// 获取条目数
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public int GetItemCount(DBSession session, OrmBaseModel model)
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            StringBuilder sql = new StringBuilder();
+            sql.Append("SELECT COUNT(1) FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
+            List<DbParameter> ValueList = new List<DbParameter>();
+            SetModelWhereSqlTextAndValues(session, model, sql, ValueList, false);
+            DbCommand cmd = session.Connection.CreateCommand();
+            if (FwUtilFunc.StringIsNotEmpty(model.Where))
+            {
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sql.Append(" AND ");
+                }
+                sql.Append(model.Where);
+            }
+            cmd.CommandText = sql.ToString();
+            logger.Debug(sql.ToString());
+            cmd.Parameters.AddRange(ValueList.ToArray());
+            object result = cmd.ExecuteScalar();
+            return Convert.ToInt32(result);
+        }
+        #endregion
+
+        #region SelectPage系
+        /// <summary>
+        /// 分页查询(OrmModel使用)
+        /// </summary>
+        /// <returns></returns>
+        public DataTable SelectPage()
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectPage(null, null);
+        }
+        /// <summary>
+        /// 分页查询(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public DataTable SelectPage(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectPage(session, null);
+        }
+        public DataTable SelectPage(OrmBaseModel model)
+        {
+            return SelectPage(null, model);
+        }
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns>DataTable</returns>
+        public DataTable SelectPage(DBSession session, OrmBaseModel model)
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DbConnection conn = session.Connection;
+            List<DbParameter> ValueList = new List<DbParameter>();
+            StringBuilder sqlText = new StringBuilder();
+            sqlText.Append(" SELECT ");
+            if (model.Distinct)
+            {
+                sqlText.Append(" DISTINCT ");
+            }
+            sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
+            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
+            if (FwUtilFunc.StringIsNotEmpty(model.Where))
+            {
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
+            }
+
+            String pageSql = addPaginationSql(sqlText.ToString(), session, model);
+            #region 缓存(分页不用)
+            //if (CacheFactory.IsCached(session, model))
+            //{
+            //   DataTable cache = CacheFactory.GetTabelCache(pageSql);
+            //    if (cache != null)
+            //    {
+            //        return cache;
+            //    }
+            //    else {
+            //        DataTable table = Select(conn, pageSql, ValueList.ToArray()).Copy();
+            //        table.TableName = GetTableName(session, model);
+            //        CacheFactory.SetTableCache(pageSql, table);
+            //        return table;
+            //    }
+            //}
+            #endregion
+            return Select(session, pageSql, ValueList.ToArray());
+        }
+
+        /// <summary>
+        /// 分页查询(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectPage<T>() where T : OrmBaseModel
+        {
+            return SelectPage<T>(null, null);
+        }
+        /// <summary>
+        /// 分页查询(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectPage<T>(DBSession session) where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectPage<T>(session, null);
+        }
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <returns>List<T></returns>
+        public List<T> SelectPage<T>(OrmBaseModel model) where T : OrmBaseModel
+        {
+            return SelectPage<T>(null, model);
+        }
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns>List<T></returns>
+        public List<T> SelectPage<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DataTable res = SelectPage(session, model);
+            List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
+            foreach (T ormModel in resT)
+            {
+                QueryForForeignOrmModel(session, ormModel);
+            }
+            return resT;
+        }
+        #endregion
+
+        #region Select系
+
+        /// <summary>
+        /// 默认选择,根据有值列(OrmModel使用)
+        /// </summary>
+        /// <returns></returns>
+        public DataTable Select()
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Select(null, null);
+        }
+
+        /// <summary>
+        /// 默认选择,根据有值列(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public DataTable Select(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Select(session, null);
+        }
+
+        /// <summary>
+        /// 默认选择,根据有值列
+        /// </summary>
+        /// <returns></returns>
+        public DataTable Select(OrmBaseModel model)
+        {
+            return Select(null, model);
+        }
+
+        /// <summary>
+        /// 默认选择,根据有值列
+        /// </summary>
+        /// <returns></returns>
+        public DataTable Select(DBSession session, OrmBaseModel model)
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DbConnection conn = session.Connection;
+            List<DbParameter> ValueList = new List<DbParameter>();
+            StringBuilder sqlText = new StringBuilder();
+            sqlText.Append(" SELECT ");
+            if (model.Distinct)
+            {
+                sqlText.Append(" DISTINCT ");
+            }
+            if (model.SqlServerTop != 0)
+            {
+                sqlText.Append(" TOP ").Append(model.SqlServerTop).Append(" ");
+            }
+            sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
+            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, false);
+            if (FwUtilFunc.StringIsNotEmpty(model.Where))
+            {
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
+            }
+            if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
+            {
+                sqlText.Append(" ORDER BY ").Append(model.OrderBy);
+            }
+            #region 缓存
+            if (CacheFactory.IsCached(session, model))
+            {
+                DataTable cache = CacheFactory.GetTabelCache(sqlText.ToString());
+                if (cache != null)
+                {
+                    return cache;
+                }
+                else
+                {
+                    DataTable table = Select(session, sqlText.ToString(), ValueList.ToArray()).Copy();
+                    CacheFactory.SetTableCache(sqlText.ToString(), table);
+                    return table;
+                }
+            }
+            #endregion
+            return Select(session, sqlText.ToString(), ValueList.ToArray());
+        }
+
+        /// <summary>
+        /// 查询，返回List<T>(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> SelectT<T>() where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectT<T>(null, null);
+        }
+
+        /// <summary>
+        /// 查询，返回List<T>(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectT<T>(DBSession session) where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectT<T>(session);
+        }
+
+        /// <summary>
+        /// 查询，返回List<T>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public List<T> SelectT<T>(OrmBaseModel model) where T : OrmBaseModel
+        {
+            return SelectT<T>(null, model);
+        }
+
+        /// <summary>
+        /// 查询，返回List<T>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public List<T> SelectT<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DataTable res = Select(session, model);
+            List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
+            foreach (T ormModel in resT)
+            {
+                QueryForForeignOrmModel(session, ormModel);
+            }
+            return resT;
+        }
+
         /// <summary>
         /// 自定义查询
         /// </summary>
@@ -1125,9 +1136,157 @@ namespace LTCingFW
             {
                 throw;
             }
-
         }
 
+        #endregion
+
+        #region SelectByPrimaryKey
+
+        /// <summary>
+        /// 通过主键查询(OrmModel使用)
+        /// </summary>
+        /// <returns></returns>
+        public DataTable SelectByPrimaryKey()
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectByPrimaryKey(null, null);
+        }
+
+        /// <summary>
+        /// 通过主键查询(OrmModel使用)
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public DataTable SelectByPrimaryKey(DBSession session)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectByPrimaryKey(session, null);
+        }
+        /// <summary>
+        /// 通过主键查询
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public DataTable SelectByPrimaryKey(OrmBaseModel model)
+        {
+            return SelectByPrimaryKey(null, model);
+        }
+        /// <summary>
+        /// 通过主键查询
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public DataTable SelectByPrimaryKey(DBSession session, OrmBaseModel model)
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DbConnection conn = session.Connection;
+            List<DbParameter> ValueList = new List<DbParameter>();
+            StringBuilder sqlText = new StringBuilder();
+            sqlText.Append(" SELECT ");
+            if (model.Distinct)
+            {
+                sqlText.Append(" DISTINCT ");
+            }
+            sqlText.Append(GetAllColumnNameStr(session, model)).Append(" FROM ").Append(GetTableName(session, model)).Append(" WHERE 1=1 ");
+            SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, true);
+            if (FwUtilFunc.StringIsNotEmpty(model.Where))
+            {
+                if (!model.Where.TrimStart().StartsWith("AND"))
+                {
+                    sqlText.Append(" AND ");
+                }
+                sqlText.Append(model.Where);
+            }
+            if (FwUtilFunc.StringIsNotEmpty(model.OrderBy))
+            {
+                sqlText.Append(" ORDER BY ").Append(model.OrderBy);
+            }
+            return Select(session, sqlText.ToString(), ValueList.ToArray());
+        }
+
+        /// <summary>
+        /// 通过主键查询,返回List<T>(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> SelectByPrimaryKey<T>() where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectByPrimaryKey<T>(null, null);
+        }
+
+        /// <summary>
+        /// 通过主键查询,返回List<T>(OrmModel使用)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public List<T> SelectByPrimaryKey<T>(DBSession session) where T : OrmBaseModel
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return SelectByPrimaryKey<T>(session, null);
+        }
+
+        /// <summary>
+        /// 通过主键查询,返回List<T>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public List<T> SelectByPrimaryKey<T>(OrmBaseModel model) where T : OrmBaseModel
+        {
+            return SelectByPrimaryKey<T>(null, model);
+        }
+
+        /// <summary>
+        /// 通过主键查询,返回List<T>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public List<T> SelectByPrimaryKey<T>(DBSession session, OrmBaseModel model) where T : OrmBaseModel
+        {
+            if (model == null && this is OrmBaseModel)
+            {
+                model = (OrmBaseModel)this;
+            }
+            if (session == null)
+            {
+                session = LTCingFWSet.GetThreadContext().DBSession;
+            }
+            DataTable res = SelectByPrimaryKey(session, model);
+            List<T> resT = FwUtilFunc.LoadOrmModelListFromDataTable<T>(res);
+            foreach (T resModel in resT)
+            {
+                QueryForForeignOrmModel(session, resModel);
+            }
+            return resT;
+        }
+        #endregion
+
+        #region Insert系
         /// <summary>
         /// 默认插入,全列插入(OrmModel使用)
         /// </summary>
@@ -1139,10 +1298,20 @@ namespace LTCingFW
             {
                 throw new LTCingFWException("此方法仅供OrmModel使用！");
             }
-            return Insert(null, null,false);
+            return Insert(null, null, false);
         }
-        public int Insert(DBSession session, OrmBaseModel model) {
-            return Insert(session, model, true) ;
+        public int Insert(OrmBaseModel model)
+        {
+            return Insert(null, model, true);
+        }
+        public int Insert(DBSession session, OrmBaseModel model)
+        {
+            return Insert(session, model, true);
+        }
+
+        public int Insert( OrmBaseModel model, bool withoutNullColumn)
+        {
+            return Insert(null, model, withoutNullColumn);
         }
         /// <summary>
         /// 默认插入,全列插入
@@ -1159,7 +1328,7 @@ namespace LTCingFW
             }
             if (session == null)
             {
-                session = LTCingFWSet.GetThreadContext().DBSession; 
+                session = LTCingFWSet.GetThreadContext().DBSession;
             }
             DbConnection conn = session.Connection;
             StringBuilder sqlText = new StringBuilder();
@@ -1174,7 +1343,7 @@ namespace LTCingFW
                 CacheFactory.RemoveAllTableCache(GetTableName(session, model));
             }
             //执行
-            return Insert( session, sqlText.ToString(), ValueList.ToArray());
+            return Insert(session, sqlText.ToString(), ValueList.ToArray());
         }
 
         /// <summary>
@@ -1190,14 +1359,34 @@ namespace LTCingFW
             return executeSqlNotQuery(session.Connection, session.Transaction, sql, parameters);
         }
 
+        #endregion
+
+        #region Delete系
+
         /// <summary>
-        /// 依据有值列删除
+        /// 根据有值列删除(OrmModel使用)
+        /// </summary>
+        public int Delete()
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Delete(null, null, false);
+        }
+
+        /// <summary>
+        /// 根据有值列删除(OrmModel使用)
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
         public int Delete(DBSession session)
         {
-            return Delete(session, false);
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Delete(session, null, false);
         }
 
         /// <summary>
@@ -1218,14 +1407,25 @@ namespace LTCingFW
         /// <summary>
         /// 依据有值列删除
         /// </summary>
+        public int Delete( OrmBaseModel model)
+        {
+            return Delete(null, model, false);
+        }
+
+        /// <summary>
+        /// 依据有值列删除
+        /// </summary>
         /// <param name="session"></param>
         /// <param name="model"></param>
         /// <returns></returns>
         public int Delete(DBSession session, OrmBaseModel model)
         {
-            return Delete( session,  model, false);
+            return Delete(session, model, false);
         }
-
+        public int Delete( OrmBaseModel model, bool onlyByPk)
+        {
+            return Delete(null, model, onlyByPk);
+        }
         /// <summary>
         /// 根据有值列删除
         /// </summary>
@@ -1275,15 +1475,44 @@ namespace LTCingFW
         {
             return executeSqlNotQuery(conn, dbTransaction, sql, parameters);
         }
+        #endregion
 
+        #region Update系
+
+        public int Update()
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Update(null,null, true);
+        }
         /// <summary>
-        /// 默认以主键更新
+        /// 默认以主键更新(OrmModel使用)
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
         public int Update(DBSession session)
         {
-            return Update(session, true);
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Update(session,null, true);
+        }
+
+        /// <summary>
+        /// 默认以主键更新(OrmModel使用)
+        /// </summary>
+        /// <param name="onlyByPk"></param>
+        /// <returns></returns>
+        public int Update( bool onlyByPk)
+        {
+            if (!(this is OrmBaseModel))
+            {
+                throw new LTCingFWException("此方法仅供OrmModel使用！");
+            }
+            return Update(null, null, onlyByPk);
         }
 
         /// <summary>
@@ -1303,12 +1532,34 @@ namespace LTCingFW
         /// <summary>
         /// 依据主键更新
         /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public int Update( OrmBaseModel model)
+        {
+            return Update(null, model, true);
+        }
+
+        /// <summary>
+        /// 依据主键更新
+        /// </summary>
         /// <param name="session"></param>
         /// <param name="model"></param>
         /// <returns></returns>
         public int Update(DBSession session, OrmBaseModel model)
         {
-            return Update( session,  model, true);
+            return Update(session, model, true);
+        }
+
+        /// <summary>
+        /// 默认修改
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="model"></param>
+        /// <param name="onlyByPk">是否只通过主键修改</param>
+        /// <returns></returns>
+        public int Update( OrmBaseModel model, bool onlyByPk)
+        {
+            return Update(null, model, true);
         }
 
         /// <summary>
@@ -1336,14 +1587,31 @@ namespace LTCingFW
                 sqlText.Append(" UPDATE ").Append(GetTableName(session, model)).Append(" SET ").Append(GetUpdateSetColumnStr(session, model));
                 GetUpdateSetColumnValues(session, model, ValueList);
                 sqlText.Append(" WHERE 1=1 ");
-                SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
+                if (onlyByPk)
+                {
+                    SetModelWhereSqlTextAndValues(session, model, sqlText, ValueList, onlyByPk);
+                }
+                if (FwUtilFunc.StringIsNotEmpty(model.Where))
+                {
+                    if (!model.Where.TrimStart().StartsWith("AND"))
+                    {
+                        sqlText.Append(" AND ");
+                    }
+                    sqlText.Append(model.Where);
+                }
+                else if (!onlyByPk)
+                {
+                    throw new LTCingFWException("UPDATE_BY_WHERE中WHERE不可以为空，如果需要全部更新请添加 AND 1=1");
+                }
+
                 //清除缓存
                 if (CacheFactory.IsCached(session, model))
                 {
                     CacheFactory.RemoveAllTableCache(GetTableName(session, model));
                 }
             }
-            catch (NoUpdateColumnException e) {
+            catch (NoUpdateColumnException e)
+            {
                 logger.Info(e.Message);
                 return 0;
             }
@@ -1365,7 +1633,9 @@ namespace LTCingFW
         {
             return executeSqlNotQuery(session.Connection, session.Transaction, sql, parameters);
         }
+        #endregion
 
+        #region 自定义系
         /// <summary>
         /// 执行非查询的SQL语句
         /// </summary>
@@ -1428,5 +1698,6 @@ namespace LTCingFW
             adapter.Fill(resultTable);
             return resultTable;
         }
+        #endregion
     }
 }

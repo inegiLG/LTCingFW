@@ -14,7 +14,7 @@ namespace LTCingFW
 {
     public abstract class BaseViewModel : OrmBaseModel, INotifyPropertyChanged
     {
-
+        public Dictionary<String, ValidResult> ValidResultDic = new Dictionary<string, ValidResult>();
         //双向绑定
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -28,15 +28,16 @@ namespace LTCingFW
         {
             if (object.Equals(storage, value)) return;
             //单项验证
-            if (value != null) {
+            if (value != null)
+            {
                 ValidResult result = ValidationFunc.Valid(this, propertyName, value.ToString());
-                String formName = this.GetType().Name.Substring(0, this.GetType().Name.IndexOf("ViewModel")) + "Form";
-                if (!result.Result)
+                if (ValidResultDic.ContainsKey(propertyName))
                 {
-                    FwUtilFunc.CreateValidLabel(formName, result);
+                    ValidResultDic[propertyName] = result;
                 }
-                else {
-                    FwUtilFunc.RemoveValidLabel(formName, result);
+                else
+                {
+                    ValidResultDic.Add(propertyName, result);
                 }
             }
             storage = value;
@@ -54,26 +55,30 @@ namespace LTCingFW
         /// <summary>
         /// 当前页数，默认为1
         /// </summary>
-        public override int CurrentPage {
+        public override int CurrentPage
+        {
             get { return current_page; }
             set { SetProperty(ref current_page, value); }
         }
         /// <summary>
         /// 每页数据条目数,默认十条
         /// </summary>
-        public override int PageItemCount {
+        public override int PageItemCount
+        {
             get { return page_item_count; }
             set { SetProperty(ref page_item_count, value); }
         }
         /// <summary>
         /// 总页数 = （总数+每页数量-1）/每页数量
         /// </summary>
-        public int TotalPageCount {
+        public int TotalPageCount
+        {
             get
             {
                 return total_page_count;
             }
-            set {
+            set
+            {
                 SetProperty(ref total_page_count, value);
             }
         }
@@ -85,7 +90,7 @@ namespace LTCingFW
             get { return total_item_count; }
             set
             {
-                
+
                 SetProperty(ref total_item_count, value);
                 //此处要将TotalPageCount计算好
                 TotalPageCount = (total_item_count + page_item_count - 1) / page_item_count;

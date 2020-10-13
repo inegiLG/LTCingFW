@@ -162,7 +162,6 @@ namespace LTCingFW
                 #region 代理方法
 
                 Type type = bean.BelongAssembly.GetType(type_full_name);
-                
                 MethodInfo[] mtds = type.GetMethods(BindingFlags.Public | BindingFlags.Instance );
                 foreach (MethodInfo mi in mtds)
                 {
@@ -193,9 +192,20 @@ namespace LTCingFW
                         continue;
                     }
                     #region 设置方法名、参数、返回值还原
-                    String OverrideTag = "override";
-   
-                    string method_head = String.Format("\n public {0} {1} {2} {3}( ", OverrideTag, FwUtilFunc.GetRegularReturnType(mi.ReturnType), mi.Name, mi.ReturnType.FullName == null ? "<T> " : "");
+                    StringBuilder generics = new StringBuilder("");
+                    if (mi.IsGenericMethod) 
+                    {
+                        generics.Append("<");
+                        foreach (Type item in mi.GetGenericArguments())
+                        {
+                            generics.Append(item.Name);
+                            generics.Append(",");
+                        }
+                        generics.Remove(generics.Length - 1, 1);
+                        generics.Append(">");
+                    }
+                    
+                    string method_head = String.Format("\n public override {0} {1} {2}( ", FwUtilFunc.GetRegularReturnType(mi.ReturnType), mi.Name, generics.ToString());
                     sb.Append(method_head);
                     #endregion
 
@@ -231,7 +241,10 @@ namespace LTCingFW
                     }
                     sb.Append(" try \n {\n");
                     sb.Append(" if (!LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId)) {\n");
-                    sb.Append(" LTCingFWSet.ThreadContextDic.Add(Thread.CurrentThread.ManagedThreadId, new LTCingFW.beans.ThreadContext());\n}\n");
+                    sb.Append(" LTCingFWSet.ThreadContextDic.Add(Thread.CurrentThread.ManagedThreadId, new LTCingFW.beans.ThreadContext());\n");
+                    sb.Append(" LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].MethodName = \"");
+                    sb.Append(type_full_name).Append(".").Append(mi.Name).Append("\";");
+                    sb.Append(" \n}\n");
                     sb.Append(" else if(LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession != null)\n");
                     sb.Append(" {\n  outerSession = true;\n}\n");
                     #endregion
@@ -244,7 +257,7 @@ namespace LTCingFW
                         sb.Append("LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession = session;\n");
                         sb.Append(" }\n");
                     }
-                    //AOP
+                    #region 前AOP方法
                     if (aspect != null) {
                         if (FwUtilFunc.StringIsNotEmpty(aspect.BeforeMethod))
                         {
@@ -262,6 +275,8 @@ namespace LTCingFW
                             sb.Append(aspect.BeforeMethod).Append("(paras);\n");
                         }
                     }
+                    #endregion
+
                     #endregion
 
                     #region 原方法，中间部分
@@ -282,7 +297,21 @@ namespace LTCingFW
                     #endregion
 
                     #region 方法后部分
-                    //AOP
+                    sb.Append(" }\n catch (Exception ex) { \n ");
+                    //sb.Append(" logger.Warn(\"Proxy_InnerException:\"+ex.Message+ex.StackTrace);\n");
+                    sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); session.Close();\n}\n");
+                    //sb.Append(" LTCingFWSet.ErrList.Add(ex); \n");//伴随框架的错误处理线程，一起注掉了
+                    sb.Append(" LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].Error = ex;\n");
+                    //sb.Append("  throw new LTCingFWException(\"事务回滚,：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
+                    sb.Append(" }\n ");
+                    sb.Append(" finally \n { \n   ");
+                    sb.Append("   if(!outerSession)\n{\n");
+                    sb.Append("     if(session != null && !session.IsClosed()) \n{ \n ");
+                    sb.Append("       session.Close(); \n}\n");
+                    sb.Append("     if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");
+                    sb.Append("       LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession = null;\n}\n");
+                    sb.Append("   }\n");
+                    #region 后AOP方法
                     if (aspect != null)
                     {
                         if (FwUtilFunc.StringIsNotEmpty(aspect.AfterMethod))
@@ -306,19 +335,7 @@ namespace LTCingFW
                         }
                     }
                     #endregion
-
-                    #region 方法尾部处理
-                    sb.Append(" }\n catch (Exception ex) { \n ");
-                    //sb.Append(" logger.Warn(\"Proxy_InnerException:\"+ex.Message+ex.StackTrace);\n");
-                    sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); session.Close();\n}\n");
-                    sb.Append("  LTCingFWSet.ErrList.Add(ex); \n");
-                    //sb.Append("  throw new LTCingFWException(\"事务回滚,：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
-                    sb.Append(" }\n ");
-                    sb.Append(" finally \n { \n if(!outerSession)\n{\n if(session != null && !session.IsClosed()) \n{ \n session.Close(); \n}\n ");
-                    sb.Append(" if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");
-                    sb.Append(" LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession = null;\n");
-                    //sb.Append(" Console.WriteLine(\"清除线程上下文DBSession\"+Thread.CurrentThread.ManagedThreadId);\n");
-                    sb.Append("}\n}\n}\n");
+                    sb.Append(" }\n");
                     //返回值
                     if (mi.ReturnType.FullName != "System.Void")
                     {
@@ -327,6 +344,7 @@ namespace LTCingFW
                     //结束
                     sb.Append("}\n");
                     #endregion
+
                 }
                 #endregion
 

@@ -26,7 +26,7 @@ namespace LTCingFW
                 lookForConfigAspect_();
                 LTCingFWProxy.createProxyForInstance();
                 injectPropertytoInstance();
-                startErrDealThread();
+                //startErrDealThread();错误显示模块
                 logger.Info("------------------------ LTCingFrameWork Started --------------------------");
             }
             catch (Exception e)

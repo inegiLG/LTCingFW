@@ -50,7 +50,7 @@ namespace LTCingFW
         /// 获取下限
         /// </summary>
         /// <returns></returns>
-        public int LowLimitNumber
+        internal int LowLimitNumber
         {
             get
             {
@@ -62,7 +62,7 @@ namespace LTCingFW
         /// 获取上限
         /// </summary>
         /// <returns></returns>
-        public int UpLimitNumber
+        internal int UpLimitNumber
         {
             get
             {

@@ -106,10 +106,10 @@ namespace LTCingFW
         /// <summary>
         /// 分页查询
         /// </summary>
-        public  void SelectPage()
+        public  void SelectPage(string pageMethod = "SelectPage")
         {
             object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
-            MethodInfo info = kepc.GetType().GetMethod("SelectPage",BindingFlags.Public|BindingFlags.Instance);
+            MethodInfo info = kepc.GetType().GetMethod(pageMethod, BindingFlags.Public|BindingFlags.Instance);
             DataTable dt_data = (DataTable)info.Invoke(kepc,null);
             Model.TablePage.Rows.Clear();
             FwUtilFunc.TransferDataTable(dt_data, Model.TablePage);

@@ -16,7 +16,16 @@ namespace LTCingFW.beans
         /// </summary>
         public DBSession DBSession { get; set; }
 
-        //以后添加，暂时不用
+        
+        /// <summary>
+        /// 线程上下文中的错误
+        /// </summary>
+        public Exception Error { get; set; }
 
+        /// <summary>
+        /// 当前进入的方法名
+        /// </summary>
+
+        public String MethodName { get; set; }
     }
 }

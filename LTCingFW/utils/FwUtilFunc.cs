@@ -887,7 +887,7 @@ namespace LTCingFW.utils
                 returnStr = "void";
             }
             //List<T>
-            if (ReturnType.Name == "List`1") {
+            else if (ReturnType.Name == "List`1") {
                 Type[] gs = ReturnType.GetGenericArguments();
                 StringBuilder sb = new StringBuilder();
                 sb.Append("System.Collections.Generic.List<");
@@ -911,10 +911,10 @@ namespace LTCingFW.utils
                 sb.Append(">");
                 returnStr = sb.ToString();
             }
-            //if (ReturnType.Name == "T" || ReturnType.FullName == null)
-            //{
-            //    returnStr = "T";
-            //}
+            else if (ReturnType.Name == "T" )
+            {
+                returnStr = "T";
+            }
             //Array
             if (ReturnType.Name.Contains("Array&"))
             {
