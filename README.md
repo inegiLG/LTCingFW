@@ -274,10 +274,8 @@ namespace CalcModSimulate.MVVM.CONTROLLER
     public class CMS_CONTROLLER
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(CMS_CONTROLLER));
-
         [Injected(Name = "CMS_COMMON_SERVICE")]
         protected CMS_COMMON_SERVICE CMS_COMMON_SERVICE_INST;
-
         public virtual void GetCTData(MainFormViewModel vm)
         {
             string luhao = vm.BOF_NO;
@@ -324,7 +322,6 @@ DBSession是数据库连接的意思，我们需要配置好连接信息。
         public virtual List<T></T> QueryT<T>(T model) where T : OrmBaseModel
         {
             DBSession session = LTCingFWSet.GetThreadContext().DBSession;
-
             return dao.Select<T>(session,model);
         }
 ```
@@ -386,7 +383,7 @@ AOP是面向切面的意思，当我们想针对某一类方法添加统一的�
 ```
 图6-1
 方法配置需要填写几个参数：
-scope：表示针对于哪些方法，【*】表示任意路径名，【.】表示路径间隔，【~】表示任意不完整字符串，如~CTData表示以CTData结尾的所有字符串。
+scope：表示针对于哪些方法，[*]表示任意路径名，[.]表示路径间隔，[~]表示任意不完整字符串，如~CTData表示以CTData结尾的所有字符串。
 beforemethod：表示在原方法之前执行的方法的路径和方法名，参考图6-2。
 aftermethod：表示在原方法之后执行的方法的路径和方法名，参考图6-2，即便原方法出现错误，此方法也会执行。
 
@@ -514,7 +511,6 @@ IS_NUMBER（数字），必须为数字的字符串。
             string[] prms = new string[4] { configVM .ClientIP, configVM.ServerIP, configVM.ServerPort ,null};
             AsyncExecOnceControllerMethod("RequestClientConfigThread", ControllerName, "RequestClientConfig", prms, sysControlbtn_Click_CallBack);
         }
-
         private void sysControlbtn_Click_CallBack(object result)
         {
             RetMsg ret = (RetMsg)result;
@@ -540,7 +536,6 @@ namespace CalcModSimulate.THREAD
 
         public override void run(object param)
         {
-
             while (IsOpen)
             {
                 try
