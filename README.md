@@ -20,9 +20,9 @@ LTCingFW是一个轻量级C#Winform应用的框架，它主要用于帮助程序
 		+ VIEWMODEL
 	+ RESOURCE
     + UTIL
-    App.config
-	log4net.config
-	LTCingFW.xml
+    +App.config
+	+log4net.config
+	+LTCingFW.xml
 
 图1-1
 
