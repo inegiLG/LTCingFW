@@ -104,10 +104,10 @@
     <Compile Include="validation\ValidateEnum.cs" />
     <Compile Include="validation\ValidationFunc.cs" />
     <Compile Include="validation\ValidResult.cs" />
-    <Compile Include="viewmodel\BaseForm.cs">
+    <Compile Include="base\BaseForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="viewmodel\BaseViewModel.cs" />
+    <Compile Include="base\BaseViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="log4net.dll" />
@@ -116,12 +116,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="viewmodel\BaseForm.resx">
+    <EmbeddedResource Include="base\BaseForm.resx">
       <DependentUpon>BaseForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="LTCingFW说明.docx" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

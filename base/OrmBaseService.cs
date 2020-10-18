@@ -50,9 +50,9 @@ namespace LTCingFW
         /// <returns>List<T></returns>
         public virtual List<T> QueryList<T>(T query_model) where T : OrmBaseModel
         {
-            ThreadContext t = LTCingFWSet.GetThreadContext();
-            DBSession session = t.DBSession;
-            return dao.SelectT<T>(session, query_model);
+                ThreadContext t = LTCingFWSet.GetThreadContext();
+                DBSession session = t.DBSession;
+                return dao.SelectT<T>(session, query_model);
         }
 
         /// <summary>

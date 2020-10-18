@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>LTCingFW</id>
+    <version>1.2.4</version>
+    <title>LTCingFW</title>
+    <authors>liugan</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/inegiLG/LTCingFW</projectUrl>
+	<repository type="git" url="https://github.com/inegiLG/LTCingFW.git" branch="main" /> 
+	<icon>LTCingFW.png</icon>
+    <description>一款winform的轻量级mvc框架，主要实现IOC、AOP、ORM等。</description>
+    <releaseNotes>增加了Github项目地址。</releaseNotes>
+    <copyright>$copyright$</copyright>
+	<language>zh-Hans</language>
+    <tags>log4net</tags>
+	<dependencies>
+		<dependency id="log4net" version="2.0.11" />
+	</dependencies>
+  </metadata>
+  <files>
+        <file src=".\README.md" target="content\README.md" />
+		<file src=".\LTCingFW.xml" target="content\README.md" />
+		<file src=".\log4net.config" target="content\README.md" />
+		<file src=".\LTCingFW.png" target=".\" />
+  </files>
+</package>

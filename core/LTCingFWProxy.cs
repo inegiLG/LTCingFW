@@ -302,7 +302,7 @@ namespace LTCingFW
                     sb.Append(" if(session != null && session.Transaction != null) \n{session.RollBack(); session.Close();\n}\n");
                     //sb.Append(" LTCingFWSet.ErrList.Add(ex); \n");//伴随框架的错误处理线程，一起注掉了
                     sb.Append(" LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].Error = ex;\n");
-                    //sb.Append("  throw new LTCingFWException(\"事务回滚,：\"+ex.TargetSite.ToString()+ex.Message+ex.StackTrace); \n");
+                    sb.Append(" throw new LTCingFWException(\"事务回滚：\"+ex.ToString()); \n");
                     sb.Append(" }\n ");
                     sb.Append(" finally \n { \n   ");
                     sb.Append("   if(!outerSession)\n{\n");

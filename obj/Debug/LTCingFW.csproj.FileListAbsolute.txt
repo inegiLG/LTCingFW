@@ -1,0 +1,10 @@
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\bin\Debug\LTCingFW.dll
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\bin\Debug\LTCingFW.pdb
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\bin\Debug\log4net.dll
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\bin\Debug\log4net.xml
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\obj\Debug\LTCingFW.csprojAssemblyReference.cache
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\obj\Debug\LTCingFW.BaseForm.resources
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\obj\Debug\LTCingFW.csproj.GenerateResource.cache
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\obj\Debug\LTCingFW.csproj.CopyComplete
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\obj\Debug\LTCingFW.dll
+E:\项目\GitProject\LTCingFW框架\LTCingFW\LTCingFW\obj\Debug\LTCingFW.pdb
