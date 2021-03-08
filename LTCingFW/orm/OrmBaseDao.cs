@@ -174,10 +174,10 @@ namespace LTCingFW
                     DbParameter param = null;
                     OrmColumnAttribute attr = bean.OrmColumnAttributeDic[session.DbAlias];
                     //可能是自增列，主键为空交给数据库判断
-                    if (attr.PrimaryKey && bean.Value == null)
-                    {
-                        throw new LTCingFWException(attr.ColName + " 插入操作主键不可为空!");
-                    }
+                    //if (attr.PrimaryKey && bean.Value == null)
+                    //{
+                    //    throw new LTCingFWException(attr.ColName + " 插入操作主键不可为空!");
+                    //}
                     if (withoutNullColumn && bean.Value == null)
                     {
                         continue;
