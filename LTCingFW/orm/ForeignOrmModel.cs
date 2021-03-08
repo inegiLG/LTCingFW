@@ -19,7 +19,7 @@ namespace LTCingFW
         private List<T> result;
         /// <summary>
         /// 结果
-        /// </summary>
+        /// </summary> 
         public List<T> Result
         {
             get {
