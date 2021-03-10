@@ -87,6 +87,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="thread\ErrorDealThread.cs" />
     <Compile Include="thread\ExecOnceThread.cs" />
+    <Compile Include="thread\ITimer.cs" />
     <Compile Include="unitdata\ColumnInfoOrmModel.cs" />
     <Compile Include="unitdata\ProjectInfoOrmModel.cs" />
     <Compile Include="unitdata\UDDao.cs" />

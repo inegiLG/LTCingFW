@@ -1,5 +1,6 @@
 ﻿using log4net;
 using LTCingFW.beans;
+using LTCingFW.thread;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
@@ -1131,6 +1131,53 @@ namespace LTCingFW.utils
             {
                 return false;
             }
+        }
+
+        //public static void StartTimer(string threadName, ITimer readThread, int intervalSecond)
+        //{
+        //    DispatcherTimer timer2 = new DispatcherTimer();
+        //    readThread.TimerName = threadName;
+        //    readThread.ThisTimer = timer2;
+        //    timer2.Tick += new EventHandler(readThread.Execute);
+        //    timer2.Interval = TimeSpan.FromSeconds(0);//立即执行
+        //    timer2.IsEnabled = true;
+        //    timer2.Start();
+        //    timer2.Interval = TimeSpan.FromSeconds(intervalSecond);
+        //    if (!LTCingFWSet.DataReadTimerDic.Keys.Contains(threadName))
+        //    {
+        //        LTCingFWSet.DataReadTimerDic.Add(threadName, readThread);
+        //    }
+
+        //}
+
+        public static void StartTimer(string threadName, ITimer readThread, int intervalSecond)
+        {
+            System.Timers.Timer timer2 = new System.Timers.Timer();
+            readThread.TimerName = threadName;
+            readThread.ThisTimer = timer2;
+            timer2.Elapsed += readThread.Execute;
+            timer2.Interval =100;//立即执行
+            timer2.AutoReset = true;
+            timer2.Enabled = true;
+            timer2.Start();
+            timer2.Interval = intervalSecond * 1000;
+            if (!LTCingFWSet.DataReadTimerDic.Keys.Contains(threadName))
+            {
+                LTCingFWSet.DataReadTimerDic.Add(threadName, readThread);
+            }
+
+        }
+
+        public static void StopTimer(string threadName)
+        {
+            if (LTCingFWSet.DataReadTimerDic.Keys.Contains(threadName))
+            {
+                ITimer timer = LTCingFWSet.DataReadTimerDic[threadName];
+                timer.ThisTimer.Stop();
+                timer.ThisTimer.Enabled = false;
+                LTCingFWSet.DataReadTimerDic.Remove(threadName);
+            }
+
         }
 
 

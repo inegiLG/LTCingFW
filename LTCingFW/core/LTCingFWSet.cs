@@ -1,4 +1,5 @@
 ﻿using LTCingFW.beans;
+using LTCingFW.thread;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -18,6 +19,12 @@ namespace LTCingFW
         /// 线程池
         /// </summary>
         public static Dictionary<String, ThreadInfo> ThreadPool { get; } = new Dictionary<String, ThreadInfo>();
+
+
+        /// <summary>
+        /// Timer线程池
+        /// </summary>
+        public static Dictionary<String, ITimer> DataReadTimerDic = new Dictionary<string, ITimer>();
 
         /// <summary>
         /// 所有的FwInstanceBean
