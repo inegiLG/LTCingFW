@@ -42,9 +42,10 @@ namespace LTCingFW
         /// <returns></returns>
         public static DBSession OpenSession(String dbAlias, bool OpenTransaction)
         {
+            DBSession session = new DBSession();
             try
             {
-                DBSession session = new DBSession();
+                
                 session.GetConnection(dbAlias);
                 session.Connection.Open();
                 if (OpenTransaction)
@@ -56,7 +57,12 @@ namespace LTCingFW
             }
             catch (Exception e)
             {
-                throw new LTCingFWException("数据库连接故障，创建DBSession[" + dbAlias + "]错误：" + e.Message);
+                if (session.Connection.State != ConnectionState.Closed)
+                {
+                    session.Connection.Close();
+                    session.Connection.Dispose();
+                }
+                throw new LTCingFWException("数据库连接故障，连接状态：创建DBSession[" + dbAlias + "]错误：" + e.ToString());
             }
         }
 
@@ -82,10 +88,12 @@ namespace LTCingFW
         {
             try
             {
-                Commit();
-                if (Connection != null)
+                
+                if (Connection != null && Connection.State != ConnectionState.Closed)
                 {
+                    Commit();
                     Connection.Close();
+                    Connection.Dispose();
                     Connection = null;
                 }
                 logger.Debug(DbAlias + "DBSession结束！");

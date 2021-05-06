@@ -1156,11 +1156,11 @@ namespace LTCingFW.utils
             readThread.TimerName = threadName;
             readThread.ThisTimer = timer2;
             timer2.Elapsed += readThread.Execute;
-            timer2.Interval =100;//立即执行
             timer2.AutoReset = true;
             timer2.Enabled = true;
-            timer2.Start();
             timer2.Interval = intervalSecond * 1000;
+            timer2.Start();
+            
             if (!LTCingFWSet.DataReadTimerDic.Keys.Contains(threadName))
             {
                 LTCingFWSet.DataReadTimerDic.Add(threadName, readThread);

@@ -334,7 +334,7 @@ namespace LTCingFW
             try
             {
                 //空
-                if (value == null || value is System.DBNull)
+                if (value == null || value is System.DBNull || (value is string && (string)value == "NaN"))
                 {
                     return System.DBNull.Value;
                 }
@@ -1612,7 +1612,7 @@ namespace LTCingFW
             }
             catch (NoUpdateColumnException e)
             {
-                logger.Info(e.Message);
+                logger.Warn(GetTableName(session, model) + e.Message);
                 return 0;
             }
             catch (Exception)

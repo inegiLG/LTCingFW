@@ -68,6 +68,7 @@
     <Compile Include="core\LTCingFWApp.cs" />
     <Compile Include="core\LTCingFWProxy.cs" />
     <Compile Include="core\LTCingFWSet.cs" />
+    <Compile Include="exceptions\LTCingFWDBConnectException.cs" />
     <Compile Include="exceptions\LTCingFWException.cs" />
     <Compile Include="exceptions\NoUpdateColumnException.cs" />
     <Compile Include="orm\attributes\OrmColumnAttribute.cs" />
