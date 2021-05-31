@@ -1175,6 +1175,7 @@ namespace LTCingFW.utils
                 ITimer timer = LTCingFWSet.DataReadTimerDic[threadName];
                 timer.ThisTimer.Stop();
                 timer.ThisTimer.Enabled = false;
+                timer.ThreadLight = null;
                 LTCingFWSet.DataReadTimerDic.Remove(threadName);
             }
 

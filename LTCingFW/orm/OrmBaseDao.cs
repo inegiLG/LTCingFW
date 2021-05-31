@@ -1130,6 +1130,8 @@ namespace LTCingFW
                 }
                 DataTable resultTable = new DataTable();
                 adapter.Fill(resultTable);
+                adapter.SelectCommand.Parameters.Clear();
+                
                 return resultTable;
             }
             catch (Exception)
@@ -1655,6 +1657,7 @@ namespace LTCingFW
             }
             cmd.CommandText = sql;
             int n = cmd.ExecuteNonQuery();
+            cmd.Parameters.Clear();
             return n;
         }
 
