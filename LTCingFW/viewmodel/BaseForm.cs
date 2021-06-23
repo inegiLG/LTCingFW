@@ -103,32 +103,59 @@ namespace LTCingFW
             Model.CurrentPage = Model.TotalPageCount;
             SelectPage();
         }
+
         /// <summary>
-        /// 分页查询
+        /// 分页查询,数据量小，使用同步
         /// </summary>
-        public  void SelectPage(string pageMethod = "SelectPage")
+        /// 
+        private void SelectPage(string pageMethod = "SelectPage")
         {
-            object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
-            MethodInfo info = kepc.GetType().GetMethod(pageMethod, BindingFlags.Public|BindingFlags.Instance);
-            DataTable dt_data = (DataTable)info.Invoke(kepc,null);
-            Model.TablePage.Rows.Clear();
-            FwUtilFunc.TransferDataTable(dt_data, Model.TablePage);
-            if (dt_data != null && dt_data.Columns.Contains("EXCUTE_RESULT") )
+            RetMsg msg = ExecControllerMethod(this.ControllerName, pageMethod, new object[] { this.QueryModel }) as RetMsg;
+            if (msg.code == "0")
             {
-                foreach (DataRow row in Model.TablePage.Rows)
+                this.Model.TablePage.Rows.Clear();
+                this.Model.TotalItemCount = msg.totalItemCount;
+                FwUtilFunc.TransferDataTable(msg.result as DataTable, this.Model.TablePage);
+                if (msg.result != null && (msg.result as DataTable).Columns.Contains("EXCUTE_RESULT"))
                 {
-                    if (row["EXCUTE_RESULT"].ToString() == "0")
+                    foreach (DataRow row in Model.TablePage.Rows)
                     {
-                        row["EXCUTE_RESULT"] = "成功";
-                    }
-                    else
-                    {
-                        row["EXCUTE_RESULT"] = "失败";
+                        if (row["EXCUTE_RESULT"].ToString() == "0")
+                        {
+                            row["EXCUTE_RESULT"] = "成功";
+                        }
+                        else
+                        {
+                            row["EXCUTE_RESULT"] = "失败";
+                        }
                     }
                 }
             }
-            
         }
+
+        //public  void SelectPage(string pageMethod = "SelectPage")
+        //{
+        //    object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
+        //    MethodInfo info = kepc.GetType().GetMethod(pageMethod, BindingFlags.Public|BindingFlags.Instance);
+        //    DataTable dt_data = (DataTable)info.Invoke(kepc,null);
+        //    Model.TablePage.Rows.Clear();
+        //    FwUtilFunc.TransferDataTable(dt_data, Model.TablePage);
+        //    if (dt_data != null && dt_data.Columns.Contains("EXCUTE_RESULT") )
+        //    {
+        //        foreach (DataRow row in Model.TablePage.Rows)
+        //        {
+        //            if (row["EXCUTE_RESULT"].ToString() == "0")
+        //            {
+        //                row["EXCUTE_RESULT"] = "成功";
+        //            }
+        //            else
+        //            {
+        //                row["EXCUTE_RESULT"] = "失败";
+        //            }
+        //        }
+        //    }
+            
+        //}
         #endregion
 
         #region 函数
@@ -138,6 +165,42 @@ namespace LTCingFW
             return info.GetValue(this);
         }
         #endregion
+
+        /// <summary>
+        /// 给查询区域的选项添加可选事件，点击小箭头，即可选择有效或无效
+        /// </summary>
+        /// <param name="queryZone"></param>
+        public void QBtnAddClickEvent(Control queryZone)
+        {
+            foreach (Control item in queryZone.Controls)
+            {
+                if (item is Button && item.Name.StartsWith("btn_q_"))
+                {
+                    string propName = item.Name.Replace("btn_q_", "");
+                    item.Click += delegate (object sender, EventArgs e)
+                    {
+                        Control tb = (Control)FwUtilFunc.GetFormControl(queryZone, "q_" + propName);
+                        if (tb != null)
+                        {
+                            if (tb.Enabled)
+                            {
+                                tb.Enabled = false;
+                                string bindingName = tb.DataBindings[0].BindingMemberInfo.BindingField;
+                                PropertyInfo prop = this.QueryModel.GetType().GetProperty(bindingName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                                if (prop != null)
+                                {
+                                    prop.SetValue(this.QueryModel, null);
+                                }
+                            }
+                            else
+                            {
+                                tb.Enabled = true;
+                            }
+                        }
+                    };
+                }
+            }
+        }
 
         public object ExecControllerMethod(String ControllerName ,String MethodName,object[] parms)
         {

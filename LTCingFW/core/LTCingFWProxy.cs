@@ -249,9 +249,10 @@ namespace LTCingFW
                     sb.Append(" else if(LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession != null)\n");
                     sb.Append(" {\n  outerSession = true;\n}\n");
                     #endregion
+
+                    #region 方法前部分
                     //进入过程ERROR置为空
                     sb.Append(" LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].Error = null;\n");
-                    #region 方法前部分
                     //Transaction判定
                     if (dbSessionAttr!= null) {
                         sb.Append(" if(!outerSession){\n");
@@ -304,7 +305,7 @@ namespace LTCingFW
                     sb.Append("   if(session != null && session.Transaction != null) \n{session.RollBack(); session.Close();\n}\n");
                     //sb.Append(" LTCingFWSet.ErrList.Add(ex); \n");//伴随框架的错误处理线程，一起注掉了
                     sb.Append("   LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].Error = ex;\n");
-                    //sb.Append("   throw ex; \n");
+                    sb.Append("   throw ex; \n");
                     sb.Append(" }\n ");
                     sb.Append(" finally \n { \n   ");
                     sb.Append("   if(!outerSession)\n{\n");
@@ -313,6 +314,7 @@ namespace LTCingFW
                     sb.Append("     if(LTCingFWSet.ThreadContextDic.ContainsKey(Thread.CurrentThread.ManagedThreadId))\n{ \n");
                     sb.Append("       LTCingFWSet.ThreadContextDic[Thread.CurrentThread.ManagedThreadId].DBSession = null;\n}\n");
                     sb.Append("   }\n");
+
                     #region 后AOP方法
                     if (aspect != null)
                     {

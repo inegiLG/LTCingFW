@@ -51,7 +51,8 @@ namespace LTCingFW
         /// <param name="memberName">属性名</param>
         /// <param name="value">属性值</param>
         /// <returns></returns>
-        public static ValidResult Valid(object model,string memberName,string value) {
+        public static ValidResult Valid(object model,string memberName,object val) {
+            string value = val.ToString();
             ValidResult result = new ValidResult();
             result.Result = true;
             result.ProPertyName = memberName;
@@ -153,10 +154,10 @@ namespace LTCingFW
                 {
                     try
                     {
-                        if (!Regex.IsMatch(value, attr.Regx))
+                        if (FwUtilFunc.StringIsNotEmpty(value) && !Regex.IsMatch(value, attr.Regx))
                         {
                             result.Result = false;
-                            result.ErrorMessage += "未通过自定义正则验证 ";
+                            result.ErrorMessage += "未通过自定义正则验证:" + attr.Regx;
                             logger.Warn(value + "不符合自定义正则表达式" + attr.Regx);
                         }
                     }
@@ -171,39 +172,44 @@ namespace LTCingFW
                 {
                     try
                     {
-                        //提取方法，验证方法信息
-                        int sp_index = attr.Function_Path.LastIndexOf('.');
-                        string classType = attr.Function_Path.Substring(0,sp_index);
-                        string methodName = attr.Function_Path.Substring(sp_index+1);
-                        Type type = Assembly.GetEntryAssembly().GetType(classType);
-                        MethodInfo mInfo = type.GetMethod(methodName,BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Static);
-                        if (mInfo == null) {
-                            throw new Exception("自定义验证函数未找到,请确定函数路径且必须为static静态!");
-                        }
-                        ParameterInfo[] pInfos = mInfo.GetParameters();
-                        if (pInfos.Length != 1 || pInfos[0].ParameterType != typeof(string)) {
-                            throw new Exception("自定义验证函数必须为一个字符串类型参数!");
-                        }
-                        if (mInfo.ReturnType != typeof(bool)) {
-                            throw new Exception("自定义验证函数返回值必须为bool布尔类型!");
-                        }
-                        //执行方法，取得结果
-                        bool ret = true;
-                        try
+                        if (FwUtilFunc.StringIsNotEmpty(value))
                         {
-                            ret = (bool)mInfo.Invoke(null, new object[] { value });
+                            //提取方法，验证方法信息
+                            int sp_index = attr.Function_Path.LastIndexOf('.');
+                            string classType = attr.Function_Path.Substring(0, sp_index);
+                            string methodName = attr.Function_Path.Substring(sp_index + 1);
+                            Type type = Assembly.GetEntryAssembly().GetType(classType);
+                            MethodInfo mInfo = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Static);
+                            if (mInfo == null)
+                            {
+                                throw new Exception("自定义验证函数未找到,请确定函数路径且必须为static静态!");
+                            }
+                            ParameterInfo[] pInfos = mInfo.GetParameters();
+                            if (pInfos.Length != 1 || pInfos[0].ParameterType != typeof(string))
+                            {
+                                throw new Exception("自定义验证函数必须为一个字符串类型参数!");
+                            }
+                            if (mInfo.ReturnType != typeof(bool))
+                            {
+                                throw new Exception("自定义验证函数返回值必须为bool布尔类型!");
+                            }
+                            //执行方法，取得结果
+                            bool ret = true;
+                            try
+                            {
+                                ret = (bool)mInfo.Invoke(null, new object[] { value });
+                            }
+                            catch (Exception)
+                            {
+                                ret = false;
+                            }
+                            //设置返回提示
+                            if (!ret)
+                            {
+                                result.Result = false;
+                                result.ErrorMessage += "未通过自定义验证方法 ";
+                            }
                         }
-                        catch (Exception )
-                        {
-                            ret = false;
-                        }
-                        //设置返回提示
-                        if (!ret)
-                        {
-                            result.Result = false;
-                            result.ErrorMessage += "未通过自定义验证方法 ";
-                        }
-
                     }
                     catch (Exception e)
                     {

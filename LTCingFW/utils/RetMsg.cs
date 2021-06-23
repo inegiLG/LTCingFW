@@ -17,6 +17,9 @@ namespace LTCingFW.utils
 
         public object result { get; set; }
 
+        //分页使用
+        public int totalItemCount { get; set; }
+
         public string startTime { get; set; } = FwUtilFunc.GetNowTimeStr13();
 
         public string endTime { get; set; } = FwUtilFunc.GetNowTimeStr13();

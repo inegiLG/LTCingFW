@@ -30,7 +30,7 @@ namespace LTCingFW
             //单项验证
             if (value != null)
             {
-                ValidResult result = ValidationFunc.Valid(this, propertyName, value.ToString());
+                ValidResult result = ValidationFunc.Valid(this, propertyName, value);
                 if (ValidResultDic.ContainsKey(propertyName))
                 {
                     ValidResultDic[propertyName] = result;
@@ -43,13 +43,17 @@ namespace LTCingFW
             storage = value;
             this.OnPropertyChanged(propertyName);
         }
-
+     
         //分页使用
         public DataTable TablePage
         {
             get
             {
                 return tablePage;
+            }
+            set
+            {
+                tablePage = value;
             }
         }
         /// <summary>
@@ -98,6 +102,6 @@ namespace LTCingFW
         }
         //顺序字典
         public Dictionary<String, String> OrderDic { get; } = new Dictionary<string, string>();
-        public abstract void Clear();
+
     }
 }

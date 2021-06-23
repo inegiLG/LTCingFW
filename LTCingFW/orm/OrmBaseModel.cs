@@ -167,6 +167,14 @@ namespace LTCingFW
             }
         }
 
-
+        public virtual void Clear()
+        {
+            PropertyInfo[] props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            foreach (var prop in props)
+            {
+                Console.WriteLine(prop.Name);
+                prop.SetValue(this, null);
+            }
+        }
     }
 }

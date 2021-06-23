@@ -4,6 +4,7 @@ using LTCingFW.thread;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
@@ -153,13 +154,82 @@ namespace LTCingFW.utils
                         String colName = data_from.Columns[j].ColumnName;
                         if (!data_to.Columns.Contains(colName))
                         {
-                            //logger.Info("接收端DataTable[" + data_to.TableName + "]中不包含列[" + colName+"]");
+                            logger.Info("接收端DataTable[" + data_to.TableName + "]中不包含列[" + colName+"]");
                         }
                         else
                         {
                             row[colName] = data_from.Rows[i][colName];
                         }
                     }
+                }
+            }
+        }
+        /// <summary>
+        /// 从DataGridView中的某一行中提取数据到BaseViewModel
+        /// </summary>
+        /// <param name="view"></param>
+        /// <param name="rowIndex">行号</param>
+        /// <param name="model"></param>
+        public static void TransDataGridViewRowToViewModel(DataGridView view, int rowIndex, BaseViewModel model)
+        {
+            DataGridViewRow row = view.Rows[rowIndex];
+            foreach (DataGridViewColumn col in view.Columns)
+            {
+                String[] ColNameSplit = col.Name.Split(new String[] { "col_" }, StringSplitOptions.RemoveEmptyEntries);
+                String ColName = ColNameSplit[ColNameSplit.Length - 1];
+                PropertyInfo prop = model.GetType().GetProperty(ColName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+                if (prop.PropertyType == typeof(string))
+                {
+                    prop.SetValue(model, Convert.ToString(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(bool))
+                {
+                    prop.SetValue(model, Convert.ToBoolean(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(DateTime))
+                {
+                    prop.SetValue(model, Convert.ToDateTime(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(int))
+                {
+                    prop.SetValue(model, Convert.ToInt32(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(short))
+                {
+                    prop.SetValue(model, Convert.ToInt16(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(long))
+                {
+                    prop.SetValue(model, Convert.ToInt64(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(float))
+                {
+                    prop.SetValue(model, Convert.ToSingle(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(double))
+                {
+                    prop.SetValue(model, Convert.ToDouble(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(decimal))
+                {
+                    prop.SetValue(model, Convert.ToDecimal(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(char))
+                {
+                    prop.SetValue(model, Convert.ToChar(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(Byte))
+                {
+                    prop.SetValue(model, Convert.ToByte(row.Cells[col.Name].Value));
+                }
+                else if (prop.PropertyType == typeof(SByte))
+                {
+                    prop.SetValue(model, Convert.ToSByte(row.Cells[col.Name].Value));
+                }
+                else
+                {
+                    logger.Warn(model.GetType().Name + "的" + prop.PropertyType.Name + "是不可被赋值的数据类型！");
                 }
             }
         }
@@ -317,11 +387,11 @@ namespace LTCingFW.utils
                                 //Boolean
                                 if ((bool)value)
                                 {
-                                    info.SetValue(model, "1");
+                                    info.SetValue(model, "True");
                                 }
                                 else
                                 {
-                                    info.SetValue(model, "0");
+                                    info.SetValue(model, "False");
                                 }
                             }
                             else
@@ -502,6 +572,8 @@ namespace LTCingFW.utils
         public static void CreateValidLabel(string formName, ValidResult ret) {
             CreateValidLabel((Form)FWAppContainer.getProperty(formName), ret);
         }
+
+
         /// <summary>
         /// 创建验证的ValidLabel
         /// </summary>
@@ -640,33 +712,19 @@ namespace LTCingFW.utils
         /// <param name="form">winForm</param>
         /// <param name="controlName">控件名</param>
         /// <returns></returns>
-        public static object GetFormControl(Form form, string controlName)
+        public static Control GetFormControl(Control source, string controlName)
         {
             Control selectedControl = null;
-            Panel panel = null;
-            foreach (Control control in form.Controls)
+            foreach (Control control in source.Controls)
             {
                 if (control.Name == controlName)
                 {
                     selectedControl = control;
+                    break;
                 }
-                if (control.Name == "tb_panel") {
-                    panel = (Panel)control;
-                }
-            }
-            if (selectedControl == null)
-            {
-
-                if (panel == null)
+                else if(control.Controls.Count != 0)
                 {
-                    return null;
-                }
-                foreach (Control control in panel.Controls)
-                {
-                    if (control.Name == controlName)
-                    {
-                        selectedControl = control;
-                    }
+                    selectedControl = GetFormControl(control, controlName) as Control;
                 }
             }
             return selectedControl;
@@ -1075,7 +1133,7 @@ namespace LTCingFW.utils
         public static object ExecControllerMethod(String ControllerName, String MethodName, object[] parms)
         {
             object kepc = LTCingFWSet.GetInstanceBean(ControllerName);
-            MethodInfo info = kepc.GetType().GetMethod(MethodName, BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo info = kepc.GetType().GetMethod(MethodName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             object dt_data = info.Invoke(kepc, parms);
             return dt_data;
         }
