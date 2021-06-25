@@ -2,16 +2,18 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>$version$</version>
+    <version>1.2.6</version>
     <title>$title$</title>
     <authors>Gan Liu</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
-    <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
-    <iconUrl>http://icon_url_here_or_delete_this_line/</iconUrl>
+    <projectUrl>https://github.com/inegiLG/LTCingFW</projectUrl>
+    <iconUrl>https://github.com/inegiLG/LTCingFW/blob/main/LTCingFW.png</iconUrl>
     <description>轻量级IOC框架，主要包括ORM和AOP等</description>
-    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
+    <releaseNotes>修复了部分bug.</releaseNotes>
     <copyright>$copyright$</copyright>
-    <tags>Tag1 Tag2</tags>
+    <references>
+		<reference file="log4net.dll" />
+	</references>
   </metadata>
 </package>
