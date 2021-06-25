@@ -24,6 +24,7 @@ namespace LTCingFW.utils
 
         public string endTime { get; set; } = FwUtilFunc.GetNowTimeStr13();
 
-
+        //其他附加信息
+        public Dictionary<string, object> others = new Dictionary<string, object>();
     }
 }

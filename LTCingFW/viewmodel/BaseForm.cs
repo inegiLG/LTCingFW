@@ -185,11 +185,14 @@ namespace LTCingFW
                             if (tb.Enabled)
                             {
                                 tb.Enabled = false;
-                                string bindingName = tb.DataBindings[0].BindingMemberInfo.BindingField;
-                                PropertyInfo prop = this.QueryModel.GetType().GetProperty(bindingName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                                if (prop != null)
+                                if (tb.DataBindings.Count > 0)
                                 {
-                                    prop.SetValue(this.QueryModel, null);
+                                    string bindingName = tb.DataBindings[0].BindingMemberInfo.BindingField;
+                                    PropertyInfo prop = this.QueryModel.GetType().GetProperty(bindingName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                                    if (prop != null)
+                                    {
+                                        prop.SetValue(this.QueryModel, null);
+                                    }
                                 }
                             }
                             else
